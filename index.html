@@ -498,6 +498,11 @@ svg .lnr{stroke:var(--bad);stroke-width:2;fill:none;stroke-dasharray:5 4}
 input[type="search"]{font-size:16px}
 @media(max-width:380px){.ht-row{flex-wrap:wrap}.ht-chips{flex-wrap:wrap}.tiles{gap:8px}.tile{min-width:0}}
 .back-nav{position:sticky;top:calc(env(safe-area-inset-top) + 8px);z-index:9;align-self:flex-start;min-height:48px;font-size:15px;padding:10px 16px;border:2px solid var(--accent);border-radius:12px;background:var(--card);color:var(--accent);box-shadow:0 2px 0 var(--accent);margin-bottom:6px} .back-nav:focus-visible{outline:3px solid var(--mark);outline-offset:2px}
+.usage{width:100%;border:1px solid var(--line);border-radius:12px;background:var(--accent-soft);color:var(--ink);overflow-wrap:anywhere}
+.usage>summary{min-height:44px;padding:10px 12px;cursor:pointer;font-weight:700;font-size:15px;line-height:1.6}
+.usage-body{display:flex;flex-direction:column;gap:12px;padding:0 14px 14px;font-size:16px;line-height:1.8}
+.usage-body p>b{display:block;color:var(--accent);font-size:14px;margin-bottom:4px}
+.usage-body a{color:var(--accent)}
 </style>
 </head>
 <body>
@@ -513,20 +518,21 @@ input[type="search"]{font-size:16px}
   </div>
 </nav>
 
-<script src="data.js?v=20"></script>
-<script src="visuals.js?v=20"></script>
-<script src="glossary.js?v=20"></script>
-<script src="terms.js?v=20"></script>
-<script src="terms2.js?v=20"></script>
-<script src="terms3.js?v=20"></script>
-<script src="dbterms.js?v=20"></script>
-<script src="lessons2.js?v=20"></script>
-<script src="guide.js?v=20"></script>
-<script src="questions.js?v=20"></script>
-<script src="app.js?v=21"></script>
-<script src="extras.js?v=20"></script>
-<script src="learn.js?v=20"></script>
-<script src="layout.js?v=20"></script>
+<script src="data.js?v=22"></script>
+<script src="visuals.js?v=22"></script>
+<script src="glossary.js?v=22"></script>
+<script src="terms.js?v=22"></script>
+<script src="terms2.js?v=22"></script>
+<script src="terms3.js?v=22"></script>
+<script src="dbterms.js?v=22"></script>
+<script src="usage.js?v=22"></script>
+<script src="lessons2.js?v=22"></script>
+<script src="guide.js?v=22"></script>
+<script src="questions.js?v=22"></script>
+<script src="app.js?v=22"></script>
+<script src="extras.js?v=22"></script>
+<script src="learn.js?v=22"></script>
+<script src="layout.js?v=22"></script>
 <script>if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});</script>
 </body>
 </html>

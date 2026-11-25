@@ -349,7 +349,7 @@ function renderTerms(){
   head.innerHTML = `
     <div class="row"><div class="bar good"><i style="width:${done/total*100}%;background:var(--good)"></i></div><span class="small muted num">覚えた ${done} / ${total}</span></div>
     <div class="legend small"><span><b class="stars">★★★</b> 過去問でくり返し出る定番　<b class="stars">★★</b> ときどき出る　<b class="stars">★</b> 知っておくと点になる</span><span><b class="newb">NEW</b> 2024年10月からの出題範囲改訂で増えたAI・データ・セキュリティなどの用語（${nw}語）</span></div>
-    <input id="tq" class="search" type="search" placeholder="用語・略語・意味で探す（例：署名、RAID、生成AI）" value="${esc(TM.q)}" autocomplete="off" aria-label="用語を探す">
+    <input id="tq" class="search" type="search" placeholder="用語・意味・使う場面で探す（例：予約、ログイン）" value="${esc(TM.q)}" autocomplete="off" aria-label="用語を探す">
     <div class="chips" id="tmode"></div>
     <div class="catscroll" id="tcat"></div>
     <button type="button" class="toggle-hide" id="thide" aria-pressed="${TM.hide}">${TM.hide ? "かくして覚えるモード：オン" : "かくして覚えるモード：オフ"}</button>`;
@@ -379,11 +379,11 @@ function renderTerms(){
   const order = TERMS.map((t,i)=>({t,i})).sort((a,b) => (b.t.f - a.t.f) || ((b.t.n?1:0) - (a.t.n?1:0)) || (a.i - b.i)).map(x => x.t);
 
   function drawList(){
-    const q = TM.q.trim().toLowerCase();
+    const words = searchKey(TM.q).split(" ").filter(Boolean);
     const hit = order.filter(t =>
       (TM.cat === "all" || t.c === TM.cat) &&
       (!/^f\d$/.test(TM.mode) || t.f === +TM.mode[1]) && (TM.mode !== "new" || t.n) && (TM.mode !== "todo" || !S.terms[termId(t)]) &&
-      (!q || [t.t, t.y, t.d, t.k].join(" ").toLowerCase().includes(q)));
+      words.every(word => searchKey([t.t, t.y, t.d, t.k, t.ex || "", usageSearchText(t)].join(" ")).includes(word)));
     list.innerHTML = hit.length ? "" : `<p class="panel muted">見つかりませんでした。言葉を短くするか、絞り込みを「すべて」に戻してみてね。</p>`;
     const cnt = document.createElement("p");
     cnt.className = "small muted"; cnt.style.textAlign = "center";
@@ -426,7 +426,7 @@ function renderTerms(){
       `<figure class="tfig">${TFig(t.fig, cat.color)}</figure>
       <p class="tdesc">${gl(t.d)}</p>
       ${t.ex ? `<p class="tex"><span class="klbl">具体例</span>${gl(t.ex)}</p>` : ""}
-      <p class="tkey"><span class="klbl">見分け方</span>${gl(t.k)}</p>`}
+      <p class="tkey"><span class="klbl">見分け方</span>${gl(t.k)}</p>${usageHTML(t)}`}
       <button type="button" class="memo-btn" aria-pressed="${memo}">${memo ? "✓ 覚えた" : "覚えたらチェック"}</button>`;
     if(typeof wireBm === "function") wireBm(el);
     const rv = el.querySelector(".reveal");
@@ -444,3 +444,4 @@ function renderTerms(){
   }
   drawList();
 }
+

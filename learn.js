@@ -123,6 +123,7 @@ function renderCards(){
       <span class="small muted">${t.y}</span>
       ${FC.flip ? `<figure class="tfig" style="width:100%">${TFig(t.fig, cat.color)}</figure><span class="fc-desc">${glosser()(t.d)}</span>${t.ex ? `<span class="tex" style="text-align:left;width:100%"><span class="klbl">具体例</span>${glosser()(t.ex)}</span>` : ""}<span class="tkey"><span class="klbl">見分け方</span>${glosser()(t.k)}</span>` : `<span class="fc-hint">意味を思い出したら、タップしてめくる</span>`}
     </button>
+    ${FC.flip ? usageHTML(t) : ""}
     <div class="fc-btns" ${FC.flip ? "" : 'style="visibility:hidden"'}>
       <button type="button" class="btn" id="fcNo">まだ</button>
       <button type="button" class="btn primary" id="fcYes">覚えた！</button>
