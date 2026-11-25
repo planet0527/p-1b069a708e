@@ -535,6 +535,16 @@ input[type="search"]{font-size:16px}
 .reference-dialog .row{flex-wrap:wrap}
 .reference-dialog .usage-body{font-size:15px}
 @media(max-width:420px){.reference-dialog{padding:12px;gap:8px}.reference-head{align-items:flex-start}.reference-head h2{font-size:16px}.reference-head .btn{flex-shrink:0}.reference-content .ftable>div{grid-template-columns:1fr;gap:4px}.reference-fab{font-size:14px}}
+
+.reference-tools{display:flex;gap:6px;flex-wrap:wrap}
+.reference-tools .btn{min-height:44px;padding:7px 10px;font-size:14px}
+.reference-tools [aria-pressed="true"]{background:var(--accent);color:white}
+.reference-item{display:grid;grid-template-columns:minmax(0,1fr) 46px;gap:6px;align-items:stretch}
+.reference-item .reference-pin{padding:6px;text-align:center;font-size:22px;min-height:44px}
+.reference-item .reference-pin[aria-pressed="true"]{color:var(--accent);background:var(--accent-soft)}
+.reference-list{grid-template-columns:1fr}
+.reference-dialog .guide-search{margin-bottom:0}
+@media(max-width:420px){.reference-dialog[open]{gap:8px}.reference-dialog>p{font-size:12px;line-height:1.5}.reference-dialog .guide-search{gap:3px}.reference-dialog .row .btn{min-height:44px;padding:6px 10px}.reference-dialog .small{font-size:12px}.reference-dialog .reference-head h2{max-width:none}}
 </style>
 </head>
 <body>
@@ -550,22 +560,22 @@ input[type="search"]{font-size:16px}
   </div>
 </nav>
 
-<script src="data.js?v=29"></script>
-<script src="visuals.js?v=29"></script>
-<script src="glossary.js?v=29"></script>
-<script src="terms.js?v=29"></script>
-<script src="terms2.js?v=29"></script>
-<script src="terms3.js?v=29"></script>
-<script src="dbterms.js?v=29"></script>
-<script src="usage.js?v=29"></script>
-<script src="lessons2.js?v=29"></script>
-<script src="guide.js?v=29"></script>
-<script src="questions.js?v=29"></script>
-<script src="app.js?v=29"></script>
-<script src="extras.js?v=29"></script>
-<script src="learn.js?v=29"></script>
-<script src="layout.js?v=29"></script>
-<script src="reference.js?v=29"></script>
+<script src="data.js?v=30"></script>
+<script src="visuals.js?v=30"></script>
+<script src="glossary.js?v=30"></script>
+<script src="terms.js?v=30"></script>
+<script src="terms2.js?v=30"></script>
+<script src="terms3.js?v=30"></script>
+<script src="dbterms.js?v=30"></script>
+<script src="usage.js?v=30"></script>
+<script src="lessons2.js?v=30"></script>
+<script src="guide.js?v=30"></script>
+<script src="questions.js?v=30"></script>
+<script src="app.js?v=30"></script>
+<script src="extras.js?v=30"></script>
+<script src="learn.js?v=30"></script>
+<script src="layout.js?v=30"></script>
+<script src="reference.js?v=30"></script>
 <script>if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});</script>
 </body>
 </html>
