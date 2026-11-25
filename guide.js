@@ -99,6 +99,44 @@ function renderGuide(){
     <details class="usage"><summary>⑤ 停電したとき、機械を安全な状態へ停止させる設計は、フェールセーフ？ フェールソフト？</summary><div class="usage-body"><p><b>答え：フェールセーフ</b>故障時の安全を優先する設計です。フェールソフトは、故障しても機能や性能を落として動き続ける考え方。「止まるか」だけでなく「安全を守る目的か、機能を縮小して継続する目的か」を見ます。</p></div></details>
     <button type="button" class="btn wide" data-go="#game">仕分けゲームで区別を練習する</button>`) +
 
+
+  sec("処理を1行ずつ追う練習", "アルゴリズム", `
+    <p>プログラムを頭の中だけで動かそうとせず、変数の値を紙に書きます。代入のたびに更新し、条件を判定した時点の値を使いましょう。</p>
+    <details class="usage"><summary>① 代入と入れ替え：a ← b は、何をする？</summary><div class="usage-body">
+      <p><b>代入は、右の値を左へ保存すること</b>a ← b は「bの値をaへ入れる」。数学の等式と違い、aとbをずっと同じ値に保つ約束ではありません。bの元の値も消えません。</p>
+      <p>最初にa＝2、b＝5として、a ← b、b ← a の順に行うと、aもbも5になります。最初の処理でaの2が上書きされるからです。</p>
+      <div class="ftable">
+        <div><b>入れ替えたいなら</b><span>一時保存する変数tempを用意します。</span></div>
+        <div><b>temp ← a</b><span>temp＝2、a＝2、b＝5</span></div>
+        <div><b>a ← b</b><span>temp＝2、a＝5、b＝5</span></div>
+        <div><b>b ← temp</b><span>temp＝2、a＝5、b＝2。元の値を失わず入れ替えられました。</span></div>
+      </div>
+      <p class="small muted">このガイドでは「←」を代入に使います。実際の問題では、代入・比較・配列の添字などの表記ルールを先に確認してください。</p>
+    </div></details>
+    <details class="usage"><summary>② 繰り返し：合計が変わる様子を追ってみる</summary><div class="usage-body">
+      <p><b>例：1から3まで足す</b>最初はsum＝0、i＝1。「iが3以下なら、sum ← sum＋i、i ← i＋1を行って、また条件を調べる」とします。</p>
+      <div class="ftable">
+        <div><b>1回目</b><span>i＝1なので条件は真。sumは0＋1＝1へ、iは2へ更新。</span></div>
+        <div><b>2回目</b><span>i＝2なので条件は真。sumは1＋2＝3へ、iは3へ更新。</span></div>
+        <div><b>3回目</b><span>i＝3なので条件は真。sumは3＋3＝6へ、iは4へ更新。</span></div>
+        <div><b>終了の確認</b><span>i＝4では「3以下」が偽。処理は行わず終了。最終値はsum＝6、i＝4です。</span></div>
+      </div>
+      <p><b>間違いやすい所</b>足す前にiを増やすと別の計算になります。「3未満」と「3以下」でも回数が変わります。答えが合計か、繰り返し回数か、終了時のiかも確認しましょう。</p>
+    </div></details>
+    <details class="usage"><summary>③ スタックとキュー：同じ順に入れても、出る順は違う</summary><div class="usage-body">
+      <p>A、B、Cの順に入れたとします。スタックは本を積むイメージで、最後に入れたCから取り出します。キューは行列のイメージで、先に入れたAから取り出します。</p>
+      <div class="ftable">
+        <div><b>スタック：後入れ先出し</b><span>A、B、Cを入れる → Cを出す → Dを入れる → 次に出るのはD。残るのはA、Bです。</span></div>
+        <div><b>キュー：先入れ先出し</b><span>A、B、Cを入れる → Aを出す → Dを入れる → 次に出るのはB。残るのはC、Dです。</span></div>
+      </div>
+      <p><b>紙に書くとき</b>スタックなら「取り出す側」を、キューなら「先頭と末尾」を決めて書きます。追加・取り出しのたびに、残った要素を更新しましょう。</p>
+    </div></details>
+    <details class="usage"><summary>確認：同時に更新するつもりでも、順番に代入すると？</summary><div class="usage-body">
+      <p>最初はx＝3、y＝4。x ← x＋y、y ← x−y の順に行うと、最後のxとyはいくつでしょう？ 答えを見る前に、1行目の後の値を書いてみましょう。</p>
+      <details class="usage"><summary>答えと理由を見る</summary><div class="usage-body"><p><b>x＝7、y＝3</b>1行目でxは3＋4＝7に変わります。2行目は更新後のxを使うので、yは7−4＝3。最初のx＝3を使って「−1」とするのが取り違えです。</p></div></details>
+    </div></details>
+    <button type="button" class="btn wide" data-go="#lessons">基礎理論・アルゴリズムを学ぶ</button>`) +
+
   sec("まず試験の形を知る", "基本", `
     <div class="gstats">
       <div><b class="num">60</b><span>問</span><small>四肢択一</small></div>
@@ -209,6 +247,26 @@ function renderGuide(){
         .map((t,i)=>`<li><label><input type="checkbox" data-ck="${i}" ${S.guideCk?.[i]?"checked":""}><span>${t}</span></label></li>`).join("")}
     </ul>`)
   );
+
+
+  const guideSections = [...app.querySelectorAll("section.guide")];
+  const guideMenu = guideSections.map((section, i) => {
+    const heading = section.querySelector("h2");
+    heading.tabIndex = -1;
+    return `<button type="button" class="btn" data-guide-jump="${i}">${esc(heading.textContent)}</button>`;
+  }).join("");
+  guideSections[0]?.insertAdjacentHTML("beforebegin", `<nav class="panel guide-index" aria-label="攻略ガイドの目次"><h2>読みたい項目を選ぶ</h2><p class="small muted">目的の説明へ移動します。ページ上部の「項目一覧へ」で、ここへ戻れます。</p><details class="usage"><summary>目次を開く</summary><div class="usage-body guide-index-list">${guideMenu}</div></details></nav><button type="button" class="btn guide-index-back">↑ 項目一覧へ</button>`);
+  app.querySelectorAll("[data-guide-jump]").forEach(button => button.onclick = () => {
+    const heading = guideSections[Number(button.dataset.guideJump)]?.querySelector("h2");
+    heading?.focus({preventScroll:true});
+    heading?.scrollIntoView({block:"start",behavior:"auto"});
+  });
+  const indexBack = app.querySelector(".guide-index-back");
+  if(indexBack) indexBack.onclick = () => {
+    const summary = app.querySelector(".guide-index summary");
+    summary.focus({preventScroll:true});
+    summary.scrollIntoView({block:"start",behavior:"auto"});
+  };
 
   app.querySelectorAll("[data-go]").forEach(b => b.onclick = () => go(b.dataset.go));
   app.querySelectorAll("[data-ck]").forEach(c => c.onchange = () => { S.guideCk ||= {}; S.guideCk[c.dataset.ck] = c.checked; save(); if(c.checked) burst(c, 8); });
