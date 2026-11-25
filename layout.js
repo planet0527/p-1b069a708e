@@ -113,9 +113,15 @@ ROUTES.home = function(){
   det.className = "panel settings-box"; det.id = "settingsBox";
   det.innerHTML = `<summary><span class="gear-s">⚙</span> 設定とバックアップ<span class="small muted">試験日・文字の大きさ・記録の保存</span></summary>`;
   [settings, backup].forEach(n => { if(n){ strip(n); n.classList.add("sub-sec"); det.appendChild(n); } });
+  if(settings){
+    const scheduleLink = document.createElement("p");
+    scheduleLink.className = "small muted";
+    scheduleLink.innerHTML = `日程が変わることがあります。<a href="https://www.ipa.go.jp/shiken/mousikomi/cbt_sg_fe.html" target="_blank" rel="noopener noreferrer">IPA公式の試験実施案内</a>`;
+    settings.appendChild(scheduleLink);
+  }
 
-  /* 試験日の設定前に、直近の公式日程を確認できるようにする */
-  const examNotice = document.createElement("div");
+  /* 試験日程はホームで確認し、設定画面からも公式情報へ戻れるようにする */
+  const examNotice = document.createElement("aside");
   examNotice.className = "callout";
   examNotice.setAttribute("aria-label", "試験日程の公式情報");
   const inPauseNoticeWindow = Date.now() < Date.parse("2027-02-01T00:00:00+09:00");
@@ -124,11 +130,11 @@ ROUTES.home = function(){
       IPAは、2026年12月28日から基本情報技術者試験を一時休止し、2027年1月下旬に再開予定と案内しています（2026年11月20日更新）。受験日を設定する前に、最新の実施予定を確認してください。<br>
       <a href="https://www.ipa.go.jp/shiken/mousikomi/cbt_sg_fe.html" target="_blank" rel="noopener noreferrer">IPA公式の試験実施案内</a>`
     : `試験日程は変更されることがあります。受験前に<a href="https://www.ipa.go.jp/shiken/mousikomi/cbt_sg_fe.html" target="_blank" rel="noopener noreferrer">IPA公式の試験実施案内</a>で最新情報を確認してください。`;
-  det.appendChild(examNotice);
+  app.appendChild(examNotice);
   if(reset) det.appendChild(reset);
 
   app.innerHTML = "";
-  app.append(top, today1, menu, roadBlock, rec, det);
+  app.append(top, examNotice, today1, menu, roadBlock, rec, det);
   const openSettings = () => { det.open = true; det.scrollIntoView({behavior: reduceMotion() ? "auto" : "smooth", block:"start"}); };
   $("#toSettings").onclick = openSettings;
   const se = $("#setExam"); if(se) se.onclick = () => { openSettings(); setTimeout(() => $("#exDate")?.focus(), 300); };
