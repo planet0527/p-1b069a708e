@@ -220,6 +220,9 @@ ORDER BY o.order_id;</code></pre>
 
   sec("図で比較する：鍵・復元・故障への備え", "全体像", `<p>似た用語の違いを、誰が何を持つか、どのデータを戻すか、どの装置が必要かで比較します。</p><details class="usage"><summary>暗号化とデジタル署名：誰の鍵で、何をする？</summary><div class="usage-body" data-motion="crypto"></div></details><details class="usage"><summary>差分と増分：復元に必要なバックアップは？</summary><div class="usage-body" data-motion="backup"></div></details><details class="usage"><summary>直列と並列：どの故障でサービスが止まる？</summary><div class="usage-body" data-motion="availability"></div></details>`) +
 
+  sec("数字を動かして理解する：計算の公式", "計算", motion2HTML().calc) +
+  sec("動かして理解する：数・式・木・メモリ", "基礎理論", motion2HTML().data) +
+  sec("動かして理解する：正規化・RAID・カプセル化", "仕組み", motion2HTML().sys) +
   sec("まず試験の形を知る", "基本", `
     <div class="gstats">
       <div><b class="num">60</b><span>問</span><small>四肢択一</small></div>
@@ -386,6 +389,7 @@ ORDER BY o.order_id;</code></pre>
   };
 
   wireMotions(host);
+  if(typeof wireMotions2 === "function") wireMotions2(host);
   host.querySelectorAll("[data-go]").forEach(b => b.onclick = () => go(b.dataset.go));
   host.querySelectorAll("[data-ck]").forEach(c => c.onchange = () => { S.guideCk ||= {}; S.guideCk[c.dataset.ck] = c.checked; save(); if(c.checked) burst(c, 8); });
 }

@@ -587,6 +587,44 @@ section.guide h2{scroll-margin-top:12px}
 .motion-timeline span{background:var(--accent);color:white;text-align:center;font-size:13px;line-height:1.6;padding:4px 0;border-right:2px solid var(--card)}
 .motion-timeline span:nth-child(2){background:var(--calc)}
 
+/* ---- 動かして理解する（追加分） ---- */
+.m2-sliders{display:grid;gap:10px;margin-bottom:10px}
+.usage-body [data-motion2] p>b,.usage-body[data-motion2] p>b{display:inline;font-size:inherit;margin:0}
+.m2-slider{display:grid;gap:2px;font-size:14px}
+.m2-slider b{color:var(--accent)}
+.m2-slider input{width:100%;accent-color:var(--accent);min-height:32px}
+.m2-w{font-size:11px;color:var(--muted);text-align:center}
+.motion-bits button.motion-cell{cursor:pointer;font:inherit;font-weight:700}
+.m2-tag{display:inline-block;font-size:12px;font-weight:700;border-radius:6px;padding:0 8px;color:#fff}
+.m2-tag.bad{background:var(--bad)}.m2-tag.good{background:var(--good)}
+.m2-bars{display:grid;gap:6px}
+.m2-bars>div{display:flex;align-items:center;gap:8px;font-size:13px}
+.m2-bars span{flex:none;width:5em}
+.m2-bars .trk{flex:1;display:flex;height:18px;background:var(--paper);border-radius:4px;overflow:hidden}
+.m2-bars i{display:block;height:100%}
+.m2-bars b{flex:none;min-width:4.5em;text-align:right}
+.m2-flow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:14px}
+.m2-flow span{border:2px solid var(--line);border-radius:8px;padding:4px 8px;background:var(--accent-soft);font-weight:700}
+.m2-flow b{font-weight:400;color:var(--muted)}
+.m2-disks{display:grid;grid-template-columns:repeat(auto-fit,minmax(52px,1fr));gap:5px}
+.m2-disk{display:flex;flex-direction:column;gap:4px;align-items:stretch;border:2px solid var(--accent);border-radius:10px;padding:6px;background:var(--card);color:var(--ink);font:inherit;cursor:pointer}
+.m2-disk span{border-radius:6px;background:var(--accent-soft);font-weight:700;font-size:14px;text-align:center}
+.m2-disk span.par{background:color-mix(in srgb,var(--calc) 30%,var(--card))}
+.m2-disk small{font-size:11px;color:var(--muted);text-align:center}
+.m2-disk.bad{border-color:var(--bad);border-style:dashed;opacity:.65}
+.m2-disk.bad span{text-decoration:line-through}
+.m2-packet{display:flex;flex-wrap:wrap;gap:3px}
+.m2-pk{border-radius:6px;padding:6px 8px;font-size:12px;font-weight:700;line-height:1.3;text-align:center;color:#fff;animation:motion-pop .25s ease-out}
+.m2-pk.d{background:var(--accent);flex:1}.m2-pk.t{background:var(--good)}.m2-pk.i{background:var(--calc)}.m2-pk.e{background:#7a55e0}
+.m2-tbls{display:grid;gap:8px}
+.motion-link{display:block;width:100%;margin:6px 0 8px;border:2px dashed var(--c,var(--accent));border-radius:12px;background:none;color:var(--ink);font:inherit;font-weight:700;font-size:14px;padding:8px;cursor:pointer}
+.m2-disk small{white-space:nowrap;font-size:10px!important}
+.m2-tbl b{font-size:13px}
+.m2-tbl table{border-collapse:collapse;width:100%;font-size:13px;margin-top:2px}
+.m2-tbl th,.m2-tbl td{border:1px solid var(--line);padding:3px 5px;text-align:left}
+.m2-tbl th{background:var(--paper);font-weight:400}
+.m2-tbl th.pk{font-weight:700;text-decoration:underline}
+.m2-tbl .hl{background:color-mix(in srgb,var(--mark) 30%,var(--card))}
 /* ---- 見やすさの修正 ---- */
 .cardslink{color:var(--ink)}
 .tabs button{white-space:nowrap;letter-spacing:-.02em}
@@ -621,24 +659,25 @@ section.guide h2{scroll-margin-top:12px}
   </div>
 </nav>
 
-<script src="data.js?v=43"></script>
-<script src="visuals.js?v=43"></script>
-<script src="glossary.js?v=43"></script>
-<script src="terms.js?v=43"></script>
-<script src="terms2.js?v=43"></script>
-<script src="terms3.js?v=43"></script>
-<script src="dbterms.js?v=43"></script>
-<script src="usage.js?v=43"></script>
-<script src="lessons2.js?v=43"></script>
-<script src="motion.js?v=43"></script>
-<script src="guide.js?v=43"></script>
-<script src="questions.js?v=43"></script>
-<script src="balance.js?v=43"></script>
-<script src="app.js?v=43"></script>
-<script src="extras.js?v=43"></script>
-<script src="learn.js?v=43"></script>
-<script src="layout.js?v=43"></script>
-<script src="reference.js?v=43"></script>
+<script src="data.js?v=44"></script>
+<script src="visuals.js?v=44"></script>
+<script src="glossary.js?v=44"></script>
+<script src="terms.js?v=44"></script>
+<script src="terms2.js?v=44"></script>
+<script src="terms3.js?v=44"></script>
+<script src="dbterms.js?v=44"></script>
+<script src="usage.js?v=44"></script>
+<script src="lessons2.js?v=44"></script>
+<script src="motion.js?v=44"></script>
+<script src="motion2.js?v=44"></script>
+<script src="guide.js?v=44"></script>
+<script src="questions.js?v=44"></script>
+<script src="balance.js?v=44"></script>
+<script src="app.js?v=44"></script>
+<script src="extras.js?v=44"></script>
+<script src="learn.js?v=44"></script>
+<script src="layout.js?v=44"></script>
+<script src="reference.js?v=44"></script>
 <script>if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});</script>
 </body>
 </html>
