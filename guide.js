@@ -229,6 +229,8 @@ ORDER BY o.order_id;</code></pre>
   sec("順番を動かして理解する：CPU・経路・ディスク", "仕組み", motion4HTML()) +
 
   sec("見えない変換を図にする：メモリと音", "仕組み", motion5HTML()) +
+  sec("つながりをたどる：幅優先・深さ優先探索", "アルゴリズム", motion6HTML().graph) +
+  sec("更新をまとめる：コミットとロールバック", "データベース", motion6HTML().db) +
   sec("まず試験の形を知る", "基本", `
     <div class="gstats">
       <div><b class="num">60</b><span>問</span><small>四肢択一</small></div>
