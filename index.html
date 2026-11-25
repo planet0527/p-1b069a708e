@@ -559,6 +559,18 @@ input[type="search"]{font-size:16px}
 .reference-own-note p{padding:6px 0 10px;line-height:1.5}
 .volume-control{display:flex;align-items:center;gap:12px;flex:1;min-width:0}.volume-control input{flex:1;width:100%;min-width:80px;min-height:44px;accent-color:var(--accent)}.volume-control output{min-width:3.6em;text-align:right;font-variant-numeric:tabular-nums}@media(max-width:420px){.setrow:has(.volume-control){flex-wrap:wrap;gap:6px}.volume-control{flex-basis:100%}}
 .listen-select{font:inherit;min-height:44px;max-width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
+
+.motion-diagram{padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--card);display:grid;gap:10px}
+.motion-cells{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-height:46px}
+.motion-cell{display:inline-block;border:2px solid var(--line);border-radius:8px;padding:8px;min-width:34px;text-align:center;background:var(--accent-soft);color:var(--ink);font-weight:700;font-size:15px}
+.motion-cell.active{border:3px solid var(--accent);background:var(--accent-soft);animation:motion-pop .25s ease-out}
+.motion-cell.found{border:3px double var(--good);background:var(--accent-soft)}
+.motion-cell.excluded{background:var(--card);color:var(--muted);border-style:dashed;text-decoration:line-through}
+.motion-side{font-size:12px}.motion-controls{display:flex;gap:6px;flex-wrap:wrap}.motion-controls .btn{min-height:44px;padding:8px 14px}
+.motion-target{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.motion-target select{font:inherit;min-height:44px;padding:7px;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;max-width:100%}
+.motion-explain{font-size:15px;line-height:1.8}
+@keyframes motion-pop{from{transform:scale(.94)}to{transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){.motion-cell.active{animation:none}}
 </style>
 </head>
 <body>
@@ -574,22 +586,23 @@ input[type="search"]{font-size:16px}
   </div>
 </nav>
 
-<script src="data.js?v=36"></script>
-<script src="visuals.js?v=36"></script>
-<script src="glossary.js?v=36"></script>
-<script src="terms.js?v=36"></script>
-<script src="terms2.js?v=36"></script>
-<script src="terms3.js?v=36"></script>
-<script src="dbterms.js?v=36"></script>
-<script src="usage.js?v=36"></script>
-<script src="lessons2.js?v=36"></script>
-<script src="guide.js?v=36"></script>
-<script src="questions.js?v=36"></script>
-<script src="app.js?v=36"></script>
-<script src="extras.js?v=36"></script>
-<script src="learn.js?v=36"></script>
-<script src="layout.js?v=36"></script>
-<script src="reference.js?v=36"></script>
+<script src="data.js?v=37"></script>
+<script src="visuals.js?v=37"></script>
+<script src="glossary.js?v=37"></script>
+<script src="terms.js?v=37"></script>
+<script src="terms2.js?v=37"></script>
+<script src="terms3.js?v=37"></script>
+<script src="dbterms.js?v=37"></script>
+<script src="usage.js?v=37"></script>
+<script src="lessons2.js?v=37"></script>
+<script src="motion.js?v=37"></script>
+<script src="guide.js?v=37"></script>
+<script src="questions.js?v=37"></script>
+<script src="app.js?v=37"></script>
+<script src="extras.js?v=37"></script>
+<script src="learn.js?v=37"></script>
+<script src="layout.js?v=37"></script>
+<script src="reference.js?v=37"></script>
 <script>if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});</script>
 </body>
 </html>

@@ -212,6 +212,8 @@ ORDER BY o.order_id;</code></pre>
     <p class="small muted">参考：PostgreSQL公式 <a href="https://www.postgresql.org/docs/current/tutorial-agg.html" target="_blank" rel="noopener noreferrer">集計</a> ／ <a href="https://www.postgresql.org/docs/current/ddl-constraints.html" target="_blank" rel="noopener noreferrer">制約とキー</a></p>
     <button type="button" class="btn wide" data-go="#lessons">データベースのレッスンを選ぶ</button>`) +
 
+  sec("動かして理解する：入れる・探す・読み出す", "アルゴリズム", motionHTML()) +
+
   sec("まず試験の形を知る", "基本", `
     <div class="gstats">
       <div><b class="num">60</b><span>問</span><small>四肢択一</small></div>
@@ -362,6 +364,7 @@ ORDER BY o.order_id;</code></pre>
     summary.scrollIntoView({block:"start",behavior:"auto"});
   };
 
+  wireMotions(host);
   host.querySelectorAll("[data-go]").forEach(b => b.onclick = () => go(b.dataset.go));
   host.querySelectorAll("[data-ck]").forEach(c => c.onchange = () => { S.guideCk ||= {}; S.guideCk[c.dataset.ck] = c.checked; save(); if(c.checked) burst(c, 8); });
 }
