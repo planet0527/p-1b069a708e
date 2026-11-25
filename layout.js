@@ -100,6 +100,18 @@ ROUTES.home = function(){
   det.className = "panel settings-box"; det.id = "settingsBox";
   det.innerHTML = `<summary><span class="gear-s">⚙</span> 設定とバックアップ<span class="small muted">試験日・文字の大きさ・記録の保存</span></summary>`;
   [settings, backup].forEach(n => { if(n){ strip(n); n.classList.add("sub-sec"); det.appendChild(n); } });
+
+  /* 試験日の設定前に、直近の公式日程を確認できるようにする */
+  const examNotice = document.createElement("div");
+  examNotice.className = "callout";
+  examNotice.setAttribute("aria-label", "試験日程の公式情報");
+  const inPauseNoticeWindow = Date.now() < Date.parse("2027-02-01T00:00:00+09:00");
+  examNotice.innerHTML = inPauseNoticeWindow
+    ? `<strong>試験日程の確認</strong><br>
+      IPAは、2026年12月28日から基本情報技術者試験を一時休止し、2027年1月下旬に再開予定と案内しています（2026年11月20日更新）。受験日を設定する前に、最新の実施予定を確認してください。<br>
+      <a href="https://www.ipa.go.jp/shiken/mousikomi/cbt_sg_fe.html" target="_blank" rel="noopener noreferrer">IPA公式の試験実施案内</a>`
+    : `試験日程は変更されることがあります。受験前に<a href="https://www.ipa.go.jp/shiken/mousikomi/cbt_sg_fe.html" target="_blank" rel="noopener noreferrer">IPA公式の試験実施案内</a>で最新情報を確認してください。`;
+  det.appendChild(examNotice);
   if(reset) det.appendChild(reset);
 
   app.innerHTML = "";
