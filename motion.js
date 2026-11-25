@@ -113,9 +113,55 @@ function wireInteractive(box){
  draw();
 }
 
+
+function recoveryPlan(kind,day){
+ const snapshots=[["A","B"],["A","B改"],["A","B改","C"],["B改","C"]];
+ const required=kind==="diff"?[0,day]:Array.from({length:day+1},(_,i)=>i);
+ return {snapshots,required};
+}
+function availability(kind,a,b){return kind==="series"?a*b:1-(1-a)*(1-b);}
+function wireProtection(box){
+ const type=box.dataset.motion;
+ let mode=type==="crypto"?"encrypt":type==="backup"?"diff":"series",step=0,day=2,failedA=false,failedB=false;
+ function draw(){
+  if(type==="crypto"){
+   const encrypt=mode==="encrypt",texts=encrypt?[
+    "受信者だけが内容を読めるように、公開鍵暗号で送る簡略例です。公開鍵が正しい相手のものかは、事前に確認されているとします。",
+    "送信者が、受信者の公開鍵で文書を暗号化します。受信者の公開鍵を他の人が知っていても構いません。",
+    "暗号文を送ります。ここで使うのは受信者の鍵で、送信者自身の公開鍵ではありません。",
+    "受信者が、自分だけが持つ秘密鍵で復号します。公開鍵は復号用の秘密鍵の代わりになりません。"
+   ]:[
+    "送信者が署名し、受信者が署名者と改変の有無を確かめる簡略例です。署名だけでは文書を隠しません。",
+    "送信者が、自分の秘密鍵で署名を作ります。秘密鍵は受信者に渡しません。",
+    "文書と署名を送ります。文書が秘密になるわけではなく、秘密にしたければ別に暗号化を組み合わせます。",
+    "受信者が、送信者の公開鍵で署名を検証します。その公開鍵が誰のものかを信頼できることも必要です。署名は文書の内容が事実であることまで保証しません。"
+   ];
+   box.innerHTML=`<label class="motion-target">目的<select data-protect-mode><option value="encrypt" ${encrypt?"selected":""}>内容を秘密にする（暗号化）</option><option value="sign" ${!encrypt?"selected":""}>送信者と改変を確認（署名）</option></select></label><div class="motion-diagram"><span class="motion-cell">送信者</span><p><b>使う鍵：</b>${step===0?"まだ使わない":encrypt?"受信者の公開鍵":"送信者の秘密鍵"}</p><div class="motion-cells"><span>↓ 送るもの</span><span class="motion-cell active">${encrypt?(step===0?"元の文書":step===3?"復号後の文書":"暗号文"):(step===0?"元の文書":"文書 ＋ 署名")}</span></div><span class="motion-cell">受信者</span><p><b>受け取った後の鍵：</b>${step<3?"次へ進めて確認":encrypt?"受信者の秘密鍵で復号":"送信者の公開鍵で検証"}</p></div><p role="status">手順 ${step} / 3：${texts[step]}</p>${controls(step,3)}`;
+   wireSteps(3);
+  }else if(type==="backup"){
+   const p=recoveryPlan(mode,day),max=p.required.length,snapshot=step===0?[]:p.snapshots[p.required[step-1]],names=["日","月","火","水"];
+   box.innerHTML=`<label class="motion-target">保存方式<select data-protect-mode><option value="diff" ${mode==="diff"?"selected":""}>差分：最後のフル以降</option><option value="increment" ${mode==="increment"?"selected":""}>増分：前回の保存以降</option></select></label><label class="motion-target">復元する時点<select data-backup-day><option value="2" ${day===2?"selected":""}>火曜の保存後</option><option value="3" ${day===3?"selected":""}>水曜の保存後</option></select></label><p>日曜のフルはA・B。月曜にBを変更、火曜にCを追加、水曜にAを削除します。</p><div class="motion-diagram"><div class="motion-cells">${names.map((name,index)=>`<span class="motion-cell ${p.required.includes(index)?"active":""}">${name}曜<br>${index===0?"フル":mode==="diff"?"差分":"増分"}${step>0&&p.required.indexOf(index)>=0&&p.required.indexOf(index)<step?"<br>適用済み":""}</span>`).join("")}</div><p><b>使う保存データ：</b>${p.required.map(i=>names[i]+"曜").join(" → ")}</p><p><b>いま復元された内容：</b>${snapshot.length?snapshot.join("・"):"まだなし"}</p></div><p role="status">手順 ${step} / ${max}：${step===0?"まず日曜のフルから戻します。太枠が復元に必要な保存データです。":step===1?"フルを読み込み、AとBが戻りました。":step===max?"目標の時点まで復元できました。"+(mode==="diff"?"差分はフルと目標日の差分で戻します。":"増分は途中の増分も順番に必要です。"):"次の増分を適用しました。次へ進めて目標時点まで反映します。"}</p>${controls(step,max)}<p class="small muted">復元に必要な組合せを学ぶ簡略例です。削除も変更として記録される方式を想定し、データは指定時点の保存分まで戻します。</p>`;
+   wireSteps(max);
+   box.querySelector("[data-backup-day]").onchange=e=>{day=Number(e.target.value);step=0;draw();box.querySelector("[data-backup-day]").focus({preventScroll:true});};
+  }else{
+   const series=mode==="series",running=series?!failedA&&!failedB:!failedA||!failedB,prob=availability(mode,.9,.8);
+   box.innerHTML=`<label class="motion-target">構成<select data-protect-mode><option value="series" ${series?"selected":""}>直列：両方必要</option><option value="parallel" ${!series?"selected":""}>並列：片方で動く</option></select></label><p>装置Aの稼働率90%、Bは80%。故障は独立で、並列時は片方だけでサービスを継続できる前提です。</p><div class="motion-diagram"><p><b>${series?"処理にはAもBも必要":"処理はAかBのどちらかでよい"}</b></p><div class="motion-cells"><button type="button" class="btn" data-failure="a" aria-pressed="${failedA}">A：${failedA?"故障":"稼働"}</button><span>${series?"→":"または"}</span><button type="button" class="btn" data-failure="b" aria-pressed="${failedB}">B：${failedB?"故障":"稼働"}</button></div><p role="status"><b>この状態のサービス：${running?"動く":"止まる"}</b></p><p><b>構成全体の稼働率：</b>${Math.round(prob*100)}%</p><p>${series?"0.9 × 0.8 ＝ 0.72":"1 − (1−0.9) × (1−0.8) ＝ 0.98"}</p></div><p>装置ボタンで「その装置が故障した場合」を試せます。下の稼働率は、その場の動作状態ではなく、設定した確率から計算した値です。</p><p class="small muted">共通電源などによる同時故障、切替失敗、修理の事情は省略しています。</p>`;
+   box.querySelectorAll("[data-failure]").forEach(btn=>btn.onclick=()=>{const key=btn.dataset.failure;if(key==="a")failedA=!failedA;else failedB=!failedB;draw();box.querySelector('[data-failure="'+key+'"]').focus({preventScroll:true});});
+  }
+  box.querySelector("[data-protect-mode]").onchange=e=>{mode=e.target.value;step=0;draw();box.querySelector("[data-protect-mode]").focus({preventScroll:true});};
+ }
+ function controls(n,max){return `<div class="motion-controls"><button type="button" class="btn" data-protect-step="-1" ${n===0?"disabled":""}>前へ</button><button type="button" class="btn primary" data-protect-step="1" ${n===max?"disabled":""}>次へ</button><button type="button" class="btn" data-protect-reset>最初から</button></div>`;}
+ function wireSteps(max){
+  box.querySelectorAll("[data-protect-step]").forEach(btn=>btn.onclick=()=>{step+=Number(btn.dataset.protectStep);draw();box.querySelector(step===max?'[data-protect-step="-1"]':'[data-protect-step="1"]').focus({preventScroll:true});});
+  box.querySelector("[data-protect-reset]").onclick=()=>{step=0;draw();box.querySelector('[data-protect-step="1"]').focus({preventScroll:true});};
+ }
+ draw();
+}
+
 function wireMotions(root){
   root.querySelectorAll("[data-motion]").forEach(box=>{
     const type=box.dataset.motion;
+    if(["crypto","backup","availability"].includes(type)){wireProtection(box);return;}
     if(["logic","subnet","path"].includes(type)){wireInteractive(box);return;}
     let i=0,target=25,local=false,deadlock=false;
     let states=type==="containers"?containerSteps():type==="binary"?binarySteps(target):type==="sort"?sortSteps():type==="network"?networkSteps(local):type==="lock"?lockSteps(deadlock):cacheSteps();

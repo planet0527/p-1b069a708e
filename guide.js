@@ -218,6 +218,8 @@ ORDER BY o.order_id;</code></pre>
 
   sec("条件を変えて理解する：論理・IP・日程", "全体像", `<p>入力や条件を変え、結果の変化を図で確かめます。初めの値と変えた後の値を比べてみましょう。</p><details class="usage"><summary>論理演算：AND・OR・XOR・NOTを切り替える</summary><div class="usage-body" data-motion="logic"></div></details><details class="usage"><summary>IPアドレス：ネットワーク部とホスト部を色分けする</summary><div class="usage-body" data-motion="subnet"></div></details><details class="usage"><summary>クリティカルパス：短縮する作業で全体の日数は変わる？</summary><div class="usage-body" data-motion="path"></div></details>`) +
 
+  sec("図で比較する：鍵・復元・故障への備え", "全体像", `<p>似た用語の違いを、誰が何を持つか、どのデータを戻すか、どの装置が必要かで比較します。</p><details class="usage"><summary>暗号化とデジタル署名：誰の鍵で、何をする？</summary><div class="usage-body" data-motion="crypto"></div></details><details class="usage"><summary>差分と増分：復元に必要なバックアップは？</summary><div class="usage-body" data-motion="backup"></div></details><details class="usage"><summary>直列と並列：どの故障でサービスが止まる？</summary><div class="usage-body" data-motion="availability"></div></details>`) +
+
   sec("まず試験の形を知る", "基本", `
     <div class="gstats">
       <div><b class="num">60</b><span>問</span><small>四肢択一</small></div>
