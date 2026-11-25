@@ -250,27 +250,32 @@ function stepper(steps, label, gl = glosser()){
 }
 
 /* 選択式クイズ。onAnswer(ok, i) を返す */
-function quiz(q, opts, ans, onAnswer, expHTML){
+function quiz(q, opts, ans, onAnswer, expHTML, previousChoice){
   const box = document.createElement("div");
   box.style.cssText = "display:flex;flex-direction:column;gap:10px";
   box.innerHTML = `<p class="q">${q}</p><div class="opts"></div><div class="fb" hidden></div>`;
   const wrap = box.querySelector(".opts"), fb = box.querySelector(".fb");
+  let answered = false;
+  const replay = Number.isInteger(previousChoice) && previousChoice >= 0 && previousChoice < opts.length;
   opts.forEach((t,i)=>{
     const b = document.createElement("button");
     b.type = "button"; b.className = "opt"; b.innerHTML = t;
     b.onclick = () => {
+      if(answered) return;
+      answered = true;
       wrap.querySelectorAll("button").forEach((x,j)=>{ x.disabled = true; if(j===ans) x.classList.add("ok"); });
       const ok = i === ans;
       if(!ok) b.classList.add("ng");
       fb.hidden = false;
       fb.className = "fb " + (ok ? "ok" : "ng");
-      const extra = onAnswer(ok, i) || "";
+      const extra = replay ? "" : onAnswer(ok, i) || "";
       const cheer = ok ? pick(["正解！","やったね！","その調子！","完ぺき！"]) : pick(["おしい！","ドンマイ！","ここで覚えよう！"]);
       fb.innerHTML = `${mascot(ok ? "happy" : "sad")}<div><strong>${cheer}${ok ? "" : ` 正解は「${opts[ans]}」`}</strong>${expHTML || ""}${extra}</div>`;
-      if(ok) burst(b);
+      if(ok && !replay) burst(b);
     };
     wrap.appendChild(b);
   });
+  if(replay) wrap.querySelectorAll("button")[previousChoice].click();
   return box;
 }
 

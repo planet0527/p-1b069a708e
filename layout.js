@@ -3,7 +3,7 @@
    入口のボタンは縦に長く並べず、2列のタイルにまとめる。 */
 
 const MENU = [
-  {go:"#practice", icon:"問", title:"問題演習", color:"#16865a", sub:() => "10問ずつ・分野を選べる"},
+  {go:"#practice", icon:"問", title:"問題演習", color:"#16865a", sub:() => "5〜20問・未回答や苦手に絞れる"},
   {go:"#mock", icon:"模", title:"模擬試験", color:"#18233b", sub:() => S.mockCur ? `再開する（${S.mockCur.ans.filter(x=>x!==null).length}/60）` : S.mocks?.length ? `前回 ${S.mocks[0].score}点` : "60問・90分"},
   {go:"#cards", icon:"札", title:"単語カード", color:"#0d7c66", sub:() => "めくる・聞き流す"},
   {go:"#terms", icon:"図", title:"用語ずかん", color:"#2b62cf", sub:() => `覚えた ${Object.keys(S.terms||{}).length}/${TERMS.length}`},

@@ -154,19 +154,34 @@ function termQuestions(cat){
 const SEC2TCAT = {basic:"basic", hw:"hw", sys:"sys", db:"db", nw:"nw", sec:"sec", dev:"dev", mgmt:"mgmt", sysst:"st", st:"st"};
 
 /* ---------- 問題演習の画面 ---------- */
-let PR = {sec:"all", src:"mix", set:null};
-function startPractice(){
+let PR = {sec:"all", src:"mix", filter:"all", count:10, set:null};
+function practicePool(){
   const bank = PR.src === "term" ? [] : QBANK.filter(q => PR.sec === "all" || q.sec === PR.sec);
   const terms = PR.src === "bank" ? [] : termQuestions(PR.sec === "all" ? null : SEC2TCAT[PR.sec]);
-  let list = PR.src === "mix" ? [...shuffle(bank).slice(0,6), ...shuffle(terms).slice(0,4)] : shuffle([...bank, ...terms]);
-  list = shuffle(list).slice(0, 10);
-  if(list.length < 10) list = shuffle([...bank, ...terms]).slice(0, 10);
+  return [...bank, ...terms].filter(q => {
+    const record = S.log?.[q.id];
+    return PR.filter === "unseen" ? !record?.n : PR.filter === "wrong" ? record?.last === 0 : true;
+  });
+}
+function practiceSet(){
+  const pool = practicePool(), count = [5,10,20].includes(PR.count) ? PR.count : 10;
+  if(!pool.length) return [];
+  if(PR.src !== "mix") return shuffle(pool).slice(0,count);
+  const bank = shuffle(pool.filter(q => !q.term)), terms = shuffle(pool.filter(q => q.term));
+  const picked = [...bank.slice(0,Math.ceil(count*0.6)), ...terms.slice(0,Math.floor(count*0.4))];
+  const ids = new Set(picked.map(q => q.id));
+  const rest = shuffle(pool.filter(q => !ids.has(q.id)));
+  return shuffle([...picked, ...rest.slice(0,Math.max(0,count-picked.length))]);
+}
+function startPractice(){
+  const list = practiceSet();
+  if(!list.length){ toast("この条件の問題はありません。分野や出題対象を変えてください。"); return; }
   PR.set = {list, i:0, ok:0, miss:[]};
   render();
 }
 function renderPractice(){
   S.practice ||= {done:0, ok:0, best:{}};
-  app.innerHTML = pageHead("問題演習", `オリジナル問題${QBANK.length}問と、用語ずかんから作る用語クイズ。10問ずつ出題するよ。`);
+  app.innerHTML = pageHead("問題演習", `オリジナル問題${QBANK.length}問と用語クイズ。未回答・間違えた問題に絞って、5〜20問ずつ練習できます。`);
   const p = document.createElement("section");
   p.className = "panel";
   app.appendChild(p);
@@ -177,26 +192,32 @@ function renderPractice(){
       <div class="row between"><h2>出題の設定</h2><span class="small muted num">これまで ${S.practice.ok} / ${S.practice.done}問 正解</span></div>
       <p class="small muted">分野</p><div class="chips" id="psec"></div>
       <p class="small muted">問題の種類</p><div class="chips" id="psrc"></div>
-      <p class="small muted" id="pinfo"></p>`;
+      <p class="small muted">出題対象</p><div class="chips" id="pfilter" role="group" aria-label="出題対象"></div>
+      <p class="small muted">1回の問題数</p><div class="chips" id="pcount" role="group" aria-label="1回の問題数"></div>
+      <p class="small muted" id="pinfo" role="status"></p>`;
     const secs = [{id:"all", title:"全分野"}, ...SECTIONS];
     const sEl = p.querySelector("#psec"), cEl = p.querySelector("#psrc"), info = p.querySelector("#pinfo");
     const srcs = [["mix","ミックス"],["bank","過去問風"],["term","用語クイズ"]];
-    const count = () => {
-      const b = QBANK.filter(q => PR.sec === "all" || q.sec === PR.sec).length;
-      const t = termQuestions(PR.sec === "all" ? null : SEC2TCAT[PR.sec]).length;
-      return PR.src === "bank" ? b : PR.src === "term" ? t : b + t;
-    };
+    const count = () => practicePool().length;
     const draw = () => {
       sEl.innerHTML = ""; cEl.innerHTML = "";
       secs.forEach(s => { const b = document.createElement("button"); b.type="button"; b.className="chipbtn"; b.setAttribute("aria-pressed", String(PR.sec===s.id)); b.textContent = s.title; b.onclick=()=>{ PR.sec=s.id; draw(); }; sEl.appendChild(b); });
       srcs.forEach(([k,l]) => { const b = document.createElement("button"); b.type="button"; b.className="chipbtn"; b.setAttribute("aria-pressed", String(PR.src===k)); b.textContent=l; b.onclick=()=>{ PR.src=k; draw(); }; cEl.appendChild(b); });
-      info.textContent = `この条件の問題：${count()}問`;
+      [["#pfilter", "filter", [["all","すべて"],["unseen","未回答だけ"],["wrong","前回間違えた問題だけ"]]],
+       ["#pcount", "count", [[5,"5問"],[10,"10問"],[20,"20問"]]]].forEach(([sel,key,options]) => {
+        const wrap = p.querySelector(sel); wrap.innerHTML = "";
+        options.forEach(([value,label]) => { const b=document.createElement("button"); b.type="button"; b.className="chipbtn"; b.textContent=label; b.setAttribute("aria-pressed",String(PR[key]===value)); b.onclick=()=>{PR[key]=value;draw();}; wrap.appendChild(b); });
+      });
+      const available = count(), n = Math.min(available, PR.count || 10);
+      info.textContent = available ? `この条件の問題：${available}問。今回は${n}問出題します。` : "この条件の問題はありません。分野や出題対象を変えてください。";
+      go1.disabled = available === 0;
+      go1.textContent = available ? `${n}問スタート` : "出題できる問題がありません";
     };
-    draw();
     const go1 = document.createElement("button");
-    go1.type = "button"; go1.className = "btn primary wide"; go1.textContent = "10問スタート";
+    go1.type = "button"; go1.className = "btn primary wide";
     go1.onclick = startPractice;
     p.appendChild(go1);
+    draw();
     p.insertAdjacentHTML("beforeend", `<p class="small muted">用語クイズは${tq}問あり、選択肢が毎回入れ替わります。</p>`);
     return;
   }
@@ -212,7 +233,7 @@ function renderPractice(){
     const btns = document.createElement("div");
     btns.style.cssText = "display:grid;gap:10px;width:100%";
     if(st.miss.length){ const b = document.createElement("button"); b.type="button"; b.className="btn primary"; b.textContent=`間違えた${st.miss.length}問だけもう一度`; b.onclick=()=>{ PR.set = {list: shuffle(st.miss), i:0, ok:0, miss:[]}; render(); }; btns.appendChild(b); }
-    const again = document.createElement("button"); again.type="button"; again.className="btn" + (st.miss.length ? "" : " primary"); again.textContent="同じ条件で次の10問"; again.onclick=startPractice;
+    const again = document.createElement("button"); again.type="button"; again.className="btn" + (st.miss.length ? "" : " primary"); again.textContent=`同じ条件で次の${PR.count || 10}問`; again.onclick=startPractice;
     btns.appendChild(again);
     const back = document.createElement("button"); back.type="button"; back.className="btn"; back.textContent="条件を変える"; back.onclick=()=>{ PR.set = null; render(); };
     btns.appendChild(back);
@@ -227,14 +248,22 @@ function renderPractice(){
   const next = document.createElement("button");
   next.type = "button"; next.className = "btn primary wide"; next.hidden = true;
   next.textContent = st.i === st.list.length-1 ? "結果を見る" : "次の問題";
-  p.appendChild(quiz(gl(q.q), q.opts, q.a, ok => {
+  st.answers ||= [];
+  p.appendChild(quiz(gl(q.q), q.opts, q.a, (ok, choice) => {
+    st.answers[st.i] = choice;
     S.practice.done++;
     rec(q, ok);
     if(ok){ st.ok++; S.practice.ok++; gainXP(4); } else { st.miss.push(q); gainXP(1); }
     save(); checkMissions();
     next.hidden = false;
     return `<p class="xp-pop">+${ok?4:1} XP</p>`;
-  }, `<p>${gl(q.exp)}</p>`));
+  }, `<p>${gl(q.exp)}</p>`, st.answers[st.i]));
+  if(Number.isInteger(st.answers[st.i])) next.hidden = false;
   next.onclick = () => { st.i++; render(); };
   p.appendChild(next);
+  const settings = document.createElement("button");
+  settings.type = "button"; settings.className = "btn wide"; settings.textContent = "中断して条件を選び直す";
+  settings.onclick = () => { PR.set = null; render(); };
+  p.appendChild(settings);
 }
+
