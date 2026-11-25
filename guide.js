@@ -214,6 +214,8 @@ ORDER BY o.order_id;</code></pre>
 
   sec("動かして理解する：入れる・探す・読み出す", "アルゴリズム", motionHTML()) +
 
+  sec("動かして理解する：整列・通信・ロック", "全体像", `<p>値の移動、宛先の確認、順番待ちを、図と途中の状態で追います。</p><details class="usage"><summary>バブルソート：比較と入れ替えの違い</summary><div class="usage-body" data-motion="sort"></div></details><details class="usage"><summary>DNS・ARP・ルータ：どの宛先を調べる？</summary><div class="usage-body" data-motion="network"></div></details><details class="usage"><summary>排他制御とデッドロック：なぜ待つ？</summary><div class="usage-body" data-motion="lock"></div></details><p class="small muted">参考：<a href="https://www.rfc-editor.org/rfc/rfc826" target="_blank" rel="noopener noreferrer">ARP（RFC 826）</a> ／ <a href="https://www.postgresql.org/docs/current/explicit-locking.html" target="_blank" rel="noopener noreferrer">PostgreSQL：ロック</a></p>`) +
+
   sec("まず試験の形を知る", "基本", `
     <div class="gstats">
       <div><b class="num">60</b><span>問</span><small>四肢択一</small></div>
