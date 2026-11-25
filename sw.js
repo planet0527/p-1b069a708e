@@ -1,6 +1,6 @@
 /* オフラインでも使えるように、アプリのファイルを端末に保存する */
-const CACHE = "kamokuA-v7";
-const FILES = ["./","index.html","data.js?v=7","visuals.js?v=7","glossary.js?v=7","terms.js?v=7","terms2.js?v=7","dbterms.js?v=7","lessons2.js?v=7","guide.js?v=7","questions.js?v=7","app.js?v=7","extras.js?v=7","learn.js?v=7","manifest.webmanifest","icon-192.png","icon-512.png","icon-180.png"];
+const CACHE = "kamokuA-v8";
+const FILES = ["./","index.html","data.js?v=8","visuals.js?v=8","glossary.js?v=8","terms.js?v=8","terms2.js?v=8","dbterms.js?v=8","lessons2.js?v=8","guide.js?v=8","questions.js?v=8","app.js?v=8","extras.js?v=8","learn.js?v=8","layout.js?v=8","manifest.webmanifest","icon-192.png","icon-512.png","icon-180.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES))); self.skipWaiting(); });
 self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k))))); self.clients.claim(); });
 self.addEventListener("fetch", e => {
