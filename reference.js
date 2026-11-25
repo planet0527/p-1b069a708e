@@ -35,7 +35,7 @@
     const tag = section.querySelector(".gtag")?.textContent || "";
     if(["単位","計算の条件","計算","暗記"].includes(tag)) return "numbers";
     if(tag === "アルゴリズム") return "algorithm";
-    if(["全体像","確認問題","データの保護","セキュリティの役割","データベース","頻出","ひっかけ","即答","略語"].includes(tag)) return "terms";
+    if(["全体像","確認問題","データの保護","セキュリティの役割","データベース","仕組み","基礎理論","ネットワーク","頻出","ひっかけ","即答","略語"].includes(tag)) return "terms";
     return "study";
   };
   let loaded = false, entries = [], active = null, previousFocus = null, previousOverflow = "";

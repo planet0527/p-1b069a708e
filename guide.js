@@ -228,6 +228,7 @@ ORDER BY o.order_id;</code></pre>
   sec("動かして理解する：SQL・再帰・ハッシュ表・回路", "アルゴリズム", motion3HTML().algo) : "") +
   sec("順番を動かして理解する：CPU・経路・ディスク", "仕組み", motion4HTML()) +
 
+  sec("見えない変換を図にする：メモリと音", "仕組み", motion5HTML()) +
   sec("まず試験の形を知る", "基本", `
     <div class="gstats">
       <div><b class="num">60</b><span>問</span><small>四肢択一</small></div>
