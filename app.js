@@ -1015,12 +1015,14 @@ function decodeRecord(t){
   if(t.startsWith("KA1:")) t = decodeURIComponent(escape(atob(t.slice(4))));
   return normalizeRecord(JSON.parse(t), true);
 }
-function applyRecord(d, msg){
+function applyRecord(d){
   const next = normalizeRecord(d, true);
+  if(!window.confirm("バックアップを読み込むと、今の学習記録は読み込む内容に置き換わります。今の記録も残したい場合は、先に「バックアップを保存」してください。読み込みますか？")) return false;
   S = next; save();
   LP = restoreLessonSession(S.lessonSession);
   toast("記録を戻しました");
   render();
+  return true;
 }
 function setupBackup(){
   const msg = t => { const m = $("#bkMsg"); if(m) m.textContent = t; };
@@ -1042,8 +1044,10 @@ function setupBackup(){
   };
   $("#bkLoad").onclick = () => $("#bkFile").click();
   $("#bkFile").onchange = e => {
-    const f = e.target.files[0]; if(!f) return;
-    f.text().then(t => { try { applyRecord(decodeRecord(t)); } catch(err){ msg("このファイルは読み込めませんでした。保存したバックアップのファイルを選んでください。"); } });
+    const input = e.target, f = input.files[0]; if(!f) return;
+    f.text().then(t => { try { applyRecord(decodeRecord(t)); } catch(err){ msg("このファイルは読み込めませんでした。保存したバックアップのファイルを選んでください。"); } })
+      .catch(() => msg("ファイルを読み込めませんでした。もう一度選んでください。"))
+      .finally(() => { input.value = ""; });
   };
   $("#bkCopy").onclick = () => {
     save();

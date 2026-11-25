@@ -1,7 +1,7 @@
 /* このアプリのファイルだけを保存し、ほかのアプリのキャッシュを保護する。 */
 const PREFIX = "kamokuA-p-1b069a708e-";
-const CACHE = PREFIX + "v16";
-const FILES = ["./","index.html","data.js?v=15","visuals.js?v=15","glossary.js?v=15","terms.js?v=15","terms2.js?v=15","terms3.js?v=15","dbterms.js?v=15","lessons2.js?v=15","guide.js?v=15","questions.js?v=15","app.js?v=15","extras.js?v=15","learn.js?v=15","layout.js?v=16","manifest.webmanifest","icon-192.png","icon-512.png","icon-180.png"];
+const CACHE = PREFIX + "v17";
+const FILES = ["./","index.html","data.js?v=15","visuals.js?v=15","glossary.js?v=15","terms.js?v=15","terms2.js?v=15","terms3.js?v=15","dbterms.js?v=15","lessons2.js?v=15","guide.js?v=15","questions.js?v=15","app.js?v=16","extras.js?v=15","learn.js?v=15","layout.js?v=16","manifest.webmanifest","icon-192.png","icon-512.png","icon-180.png"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
 });
