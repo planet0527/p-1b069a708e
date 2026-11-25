@@ -216,6 +216,8 @@ ORDER BY o.order_id;</code></pre>
 
   sec("動かして理解する：整列・通信・ロック", "全体像", `<p>値の移動、宛先の確認、順番待ちを、図と途中の状態で追います。</p><details class="usage"><summary>バブルソート：比較と入れ替えの違い</summary><div class="usage-body" data-motion="sort"></div></details><details class="usage"><summary>DNS・ARP・ルータ：どの宛先を調べる？</summary><div class="usage-body" data-motion="network"></div></details><details class="usage"><summary>排他制御とデッドロック：なぜ待つ？</summary><div class="usage-body" data-motion="lock"></div></details><p class="small muted">参考：<a href="https://www.rfc-editor.org/rfc/rfc826" target="_blank" rel="noopener noreferrer">ARP（RFC 826）</a> ／ <a href="https://www.postgresql.org/docs/current/explicit-locking.html" target="_blank" rel="noopener noreferrer">PostgreSQL：ロック</a></p>`) +
 
+  sec("条件を変えて理解する：論理・IP・日程", "全体像", `<p>入力や条件を変え、結果の変化を図で確かめます。初めの値と変えた後の値を比べてみましょう。</p><details class="usage"><summary>論理演算：AND・OR・XOR・NOTを切り替える</summary><div class="usage-body" data-motion="logic"></div></details><details class="usage"><summary>IPアドレス：ネットワーク部とホスト部を色分けする</summary><div class="usage-body" data-motion="subnet"></div></details><details class="usage"><summary>クリティカルパス：短縮する作業で全体の日数は変わる？</summary><div class="usage-body" data-motion="path"></div></details>`) +
+
   sec("まず試験の形を知る", "基本", `
     <div class="gstats">
       <div><b class="num">60</b><span>問</span><small>四肢択一</small></div>

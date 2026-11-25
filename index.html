@@ -571,6 +571,14 @@ input[type="search"]{font-size:16px}
 .motion-explain{font-size:15px;line-height:1.8}
 @keyframes motion-pop{from{transform:scale(.94)}to{transform:scale(1)}}
 @media(prefers-reduced-motion:reduce){.motion-cell.active{animation:none}}
+
+.motion-bits{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:3px}
+.motion-bits .motion-cell{padding:5px 0;min-width:0;font-size:14px}
+.motion-cell.motion-host{border-style:dashed;background:var(--card)}
+.motion-tr-current{background:var(--accent-soft);font-weight:700}
+.motion-timeline{display:flex;width:100%;gap:0;min-height:48px;background:var(--accent-soft);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.motion-timeline span{background:var(--accent);color:white;text-align:center;font-size:13px;line-height:1.6;padding:4px 0;border-right:2px solid var(--card)}
+.motion-timeline span:nth-child(2){background:var(--calc)}
 </style>
 </head>
 <body>
@@ -586,23 +594,23 @@ input[type="search"]{font-size:16px}
   </div>
 </nav>
 
-<script src="data.js?v=38"></script>
-<script src="visuals.js?v=38"></script>
-<script src="glossary.js?v=38"></script>
-<script src="terms.js?v=38"></script>
-<script src="terms2.js?v=38"></script>
-<script src="terms3.js?v=38"></script>
-<script src="dbterms.js?v=38"></script>
-<script src="usage.js?v=38"></script>
-<script src="lessons2.js?v=38"></script>
-<script src="motion.js?v=38"></script>
-<script src="guide.js?v=38"></script>
-<script src="questions.js?v=38"></script>
-<script src="app.js?v=38"></script>
-<script src="extras.js?v=38"></script>
-<script src="learn.js?v=38"></script>
-<script src="layout.js?v=38"></script>
-<script src="reference.js?v=38"></script>
+<script src="data.js?v=39"></script>
+<script src="visuals.js?v=39"></script>
+<script src="glossary.js?v=39"></script>
+<script src="terms.js?v=39"></script>
+<script src="terms2.js?v=39"></script>
+<script src="terms3.js?v=39"></script>
+<script src="dbterms.js?v=39"></script>
+<script src="usage.js?v=39"></script>
+<script src="lessons2.js?v=39"></script>
+<script src="motion.js?v=39"></script>
+<script src="guide.js?v=39"></script>
+<script src="questions.js?v=39"></script>
+<script src="app.js?v=39"></script>
+<script src="extras.js?v=39"></script>
+<script src="learn.js?v=39"></script>
+<script src="layout.js?v=39"></script>
+<script src="reference.js?v=39"></script>
 <script>if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});</script>
 </body>
 </html>

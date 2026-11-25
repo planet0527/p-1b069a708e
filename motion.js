@@ -74,9 +74,49 @@ function lockSteps(deadlock){
  ];return rows.map(([resource,a,b,text])=>({resource,a,b,text}));
 }
 
+
+function logicResult(op,a,b){return op==="AND"?(a&b):op==="OR"?(a|b):op==="XOR"?(a^b):1-a;}
+function subnetResult(prefix){
+ const bits=32-prefix,mask=(256-2**bits)&255,network=154&mask,broadcast=network+2**bits-1;
+ return {bits,mask,network,broadcast,hosts:2**bits-2};
+}
+function pathResult(mode){
+ const top=[3,mode==="top-short"?3:mode==="top-long"?9:5],bottom=[4,mode==="bottom-short"?3:6];
+ const t=top[0]+top[1],b=bottom[0]+bottom[1];return {top,bottom,t,b,total:Math.max(t,b)};
+}
+function wireInteractive(box){
+ const type=box.dataset.motion;
+ let a=0,b=1,op="AND",prefix=26,step=0,mode="base";
+ function draw(){
+  if(type==="logic"){
+   const out=logicResult(op,a,b),names={AND:"両方が1のとき1",OR:"どちらかが1なら1",XOR:"2つが違うとき1",NOT:"0と1を反転"};
+   box.innerHTML=`<label class="motion-target">演算<select data-op>${Object.keys(names).map(x=>`<option ${x===op?"selected":""}>${x}</option>`).join("")}</select></label><div class="motion-cells"><button type="button" class="btn" data-bit="a" aria-pressed="${!!a}">入力A：${a}</button>${op==="NOT"?"":`<button type="button" class="btn" data-bit="b" aria-pressed="${!!b}">入力B：${b}</button>`}<span>→</span><span class="motion-cell">${op}</span><span>→</span><span class="motion-cell ${out?"found":""}">出力 ${out}</span></div><p role="status">${names[op]}。今の入力では出力は${out}です。入力ボタンで0と1を切り替えられます。</p><details class="usage"><summary>真理値表で全組合せを確認する</summary><div class="usage-body"><div class="guide-table-wrap"><table class="guide-table"><thead><tr><th scope="col">A</th>${op==="NOT"?"":'<th scope="col">B</th>'}<th scope="col">出力</th></tr></thead><tbody>${(op==="NOT"?[[0,0],[1,0]]:[[0,0],[0,1],[1,0],[1,1]]).map(([x,y])=>`<tr class="${x===a&&(op==="NOT"||y===b)?"motion-tr-current":""}"><td>${x}</td>${op==="NOT"?"":`<td>${y}</td>`}<td>${logicResult(op,x,y)}</td></tr>`).join("")}</tbody></table></div><p class="small">強調行は今の入力です。XORはORと違い、両方1だと0になります。</p></div></details>`;
+   box.querySelector("[data-op]").onchange=e=>{op=e.target.value;draw();box.querySelector("[data-op]").focus({preventScroll:true});};
+   box.querySelectorAll("[data-bit]").forEach(btn=>btn.onclick=()=>{const key=btn.dataset.bit;if(key==="a")a=1-a;else b=1-b;draw();box.querySelector('[data-bit="'+key+'"]').focus({preventScroll:true});});
+  }else if(type==="subnet"){
+   const r=subnetResult(prefix),binary=n=>n.toString(2).padStart(8,"0"),texts=[
+    "左から"+prefix+"ビットがネットワーク部。残る"+r.bits+"ビットがホスト部です。",
+    "IPとマスクのANDを取ります。マスクの1の位置は元の値が残り、0の位置は0になります。",
+    "ネットワークアドレスは192.0.2."+r.network+"。ホスト部をすべて0にした、その範囲の先頭です。",
+    "範囲の末尾192.0.2."+r.broadcast+"がブロードキャスト。通常のホスト用は192.0.2."+(r.network+1)+"〜"+(r.broadcast-1)+"で"+r.hosts+"台です。"
+   ];
+   box.innerHTML=`<label class="motion-target">プレフィックス<select data-prefix>${[24,26,28].map(x=>`<option value="${x}" ${x===prefix?"selected":""}>/${x}</option>`).join("")}</select></label><p><b>IPアドレス：192.0.2.154</b><br>最初の24ビット（192.0.2）は全てネットワーク部。</p><div class="motion-diagram"><b>最後の8ビット：青＝ネットワーク部、点線＝ホスト部</b><div class="motion-bits" role="img" aria-label="最後の8ビットは10011010。左${prefix-24}ビットがネットワーク部">${binary(154).split("").map((x,i)=>`<span class="motion-cell ${i<prefix-24?"active":"motion-host"}">${x}</span>`).join("")}</div>${step>=1?`<p>IP：${binary(154)}<br>マスク：${binary(r.mask)}<br>AND結果：${binary(r.network)}</p><p>サブネットマスク：255.255.255.${r.mask}</p>`:""}${step>=2?`<p><b>ネットワーク：192.0.2.${r.network}/${prefix}</b></p>`:""}${step>=3?`<p>アドレス数：2の${r.bits}乗＝${r.hosts+2}個<br>通常のホスト用：${r.hosts+2}−2＝${r.hosts}台</p>`:""}</div><p role="status">手順 ${step} / 3：${texts[step]}</p><div class="motion-controls"><button type="button" class="btn" data-ip-step="-1" ${step===0?"disabled":""}>前へ</button><button type="button" class="btn primary" data-ip-step="1" ${step===3?"disabled":""}>次へ</button><button type="button" class="btn" data-ip-reset>最初から</button></div><p class="small muted">通常のIPv4サブネットの例です。/31・/32などの特殊な用途に「−2」を機械的に適用しません。</p>`;
+   box.querySelector("[data-prefix]").onchange=e=>{prefix=Number(e.target.value);step=0;draw();box.querySelector("[data-prefix]").focus({preventScroll:true});};
+   box.querySelectorAll("[data-ip-step]").forEach(btn=>btn.onclick=()=>{step+=Number(btn.dataset.ipStep);draw();box.querySelector(step===3?'[data-ip-step="-1"]':'[data-ip-step="1"]').focus({preventScroll:true});});
+   box.querySelector("[data-ip-reset]").onclick=()=>{step=0;draw();box.querySelector('[data-ip-step="1"]').focus({preventScroll:true});};
+  }else{
+   const p=pathResult(mode);
+   box.innerHTML=`<label class="motion-target">変更する条件<select data-path><option value="base" ${mode==="base"?"selected":""}>変更なし</option><option value="top-short" ${mode==="top-short"?"selected":""}>Bを5日→3日</option><option value="bottom-short" ${mode==="bottom-short"?"selected":""}>Dを6日→3日</option><option value="top-long" ${mode==="top-long"?"selected":""}>Bを5日→9日</option></select></label><p>A→BとC→Dを同時に開始し、両方が終わると完了する仕事です。</p><div class="motion-diagram"><b>開始（0日）</b>${[[p.top,p.t,["A","B"]],[p.bottom,p.b,["C","D"]]].map(([durations,total,labels])=>`<div><p>${labels.join(" → ")}：${total}日 ${total===p.total?"（クリティカルパス）":""}</p><div class="motion-timeline" role="img" aria-label="${labels[0]}が${durations[0]}日、その後${labels[1]}が${durations[1]}日">${durations.map((n,i)=>`<span style="width:${n/12*100}%">${labels[i]}<br>${n}日</span>`).join("")}</div></div>`).join("")}<b>全体の最短日数：${p.total}日</b></div><p role="status">${mode==="top-short"?"Bを短くしても、C→Dの10日を待つため全体は短くなりません。":mode==="bottom-short"?"Dを短くするとC→Dは7日。今度はA→Bの8日がクリティカルパスになります。":mode==="top-long"?"Bが延びるとA→Bは12日。長いほうの経路が切り替わり、全体も12日になります。":"A→Bは8日、C→Dは10日。順番に行う分は足し、同時に進める経路は長いほうを待ちます。"}</p><p class="small muted">人員などの資源制約や余分な待機はない簡略例です。図の横幅は12日を共通の尺度にしています。</p>`;
+   box.querySelector("[data-path]").onchange=e=>{mode=e.target.value;draw();box.querySelector("[data-path]").focus({preventScroll:true});};
+  }
+ }
+ draw();
+}
+
 function wireMotions(root){
   root.querySelectorAll("[data-motion]").forEach(box=>{
     const type=box.dataset.motion;
+    if(["logic","subnet","path"].includes(type)){wireInteractive(box);return;}
     let i=0,target=25,local=false,deadlock=false;
     let states=type==="containers"?containerSteps():type==="binary"?binarySteps(target):type==="sort"?sortSteps():type==="network"?networkSteps(local):type==="lock"?lockSteps(deadlock):cacheSteps();
     const cells=(values,extra=()=> "")=>values.map((value,index)=>`<span class="motion-cell ${extra(index)}">${value===null?"空":esc(String(value))}</span>`).join("");
