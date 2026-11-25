@@ -15,7 +15,7 @@
   dialog.innerHTML = `<div class="reference-head"><h2 id="reference-title">いつでも学習メモ</h2><button type="button" class="btn" data-ref-close aria-label="閉じて学習に戻る">学習に戻る</button></div>
     <p class="small muted">問題を開いたまま確認できます。制限時間のある練習では、タイマーは進みます。</p>
     <label class="guide-search">知りたいことを探す<input type="search" data-ref-search placeholder="例：キャッシュ、SQL、誰の鍵"></label>
-    <div class="reference-tools" aria-label="学習メモの絞り込み"><button type="button" class="btn" data-ref-all aria-pressed="true">すべて</button><button type="button" class="btn" data-ref-saved aria-pressed="false">保存した項目</button><button type="button" class="btn" data-ref-clear hidden>検索を消す</button></div>
+    <div class="reference-tools" aria-label="学習メモの絞り込み"><button type="button" class="btn" data-ref-all aria-pressed="true">すべて</button><button type="button" class="btn" data-ref-saved aria-pressed="false">保存した項目</button><button type="button" class="btn" data-ref-recent aria-pressed="false">最近見た</button></div><div class="reference-filter-row"><label>分野<select data-ref-category><option value="">全分野</option><option value="numbers">計算・数字</option><option value="terms">用語・仕組み</option><option value="algorithm">アルゴリズム</option><option value="study">学び方・試験</option></select></label><button type="button" class="btn" data-ref-clear hidden>絞り込み解除</button></div>
     <div class="row between"><p class="small muted" data-ref-count role="status"></p><button type="button" class="btn" data-ref-list hidden>項目一覧へ</button></div>
     <div class="reference-list"></div><div class="reference-content"></div>`;
   document.body.appendChild(dialog);
@@ -27,14 +27,25 @@
   const allButton = dialog.querySelector("[data-ref-all]");
   const savedButton = dialog.querySelector("[data-ref-saved]");
   const clearButton = dialog.querySelector("[data-ref-clear]");
-  let onlySaved = false, listScroll = 0;
+  const recentButton = dialog.querySelector("[data-ref-recent]");
+  const category = dialog.querySelector("[data-ref-category]");
+  let mode = "all", listScroll = 0;
+  const history = () => Array.isArray(S.ui?.referenceRecent) ? S.ui.referenceRecent.filter(x => typeof x === "string").slice(0,6) : [];
+  const group = section => {
+    const tag = section.querySelector(".gtag")?.textContent || "";
+    if(["単位","計算の条件","計算","暗記"].includes(tag)) return "numbers";
+    if(tag === "アルゴリズム") return "algorithm";
+    if(["全体像","確認問題","データの保護","セキュリティの役割","データベース","頻出","ひっかけ","即答","略語"].includes(tag)) return "terms";
+    return "study";
+  };
   let loaded = false, entries = [], active = null, previousFocus = null, previousOverflow = "";
   const pinned = title => Array.isArray(S.ui?.referencePins) && S.ui.referencePins.includes(title);
   function updatePins(){
     const total = entries.filter(entry => pinned(entry.title)).length;
     savedButton.textContent = "保存 " + total + "件";
-    allButton.setAttribute("aria-pressed", String(!onlySaved));
-    savedButton.setAttribute("aria-pressed", String(onlySaved));
+    allButton.setAttribute("aria-pressed", String(mode === "all"));
+    savedButton.setAttribute("aria-pressed", String(mode === "saved"));
+    recentButton.setAttribute("aria-pressed", String(mode === "recent"));
     entries.forEach(entry => {
       const yes = pinned(entry.title);
       entry.pin.textContent = yes ? "★" : "☆";
@@ -50,13 +61,15 @@
     listButton.hidden = true;
     const words = search.value.normalize("NFKC").toLowerCase().trim().split(/\s+/).filter(Boolean);
     let matches = 0;
-    entries.forEach(entry => {
-      const visible = (!onlySaved || pinned(entry.title)) && words.every(word => entry.text.includes(word));
+    const recent = history();
+    entries.forEach((entry, i) => {
+      const visible = (mode !== "saved" || pinned(entry.title)) && (mode !== "recent" || recent.includes(entry.title)) && (!category.value || entry.group === category.value) && words.every(word => entry.text.includes(word));
+      entry.row.style.order = String(mode === "recent" ? (recent.indexOf(entry.title) < 0 ? entries.length : recent.indexOf(entry.title)) : i);
       entry.row.hidden = !visible;
       if(visible) matches++;
     });
-    count.textContent = matches ? matches + "件から選べます" : onlySaved && !entries.some(entry => pinned(entry.title)) ? "☆を押すと、よく見る項目をここに保存できます。" : "見つかりません。検索を消すか、すべての項目から探してください。";
-    clearButton.hidden = !search.value;
+    count.textContent = matches ? matches + "件から選べます" : mode === "saved" && !entries.some(entry => pinned(entry.title)) ? "☆を押すと、よく見る項目をここに保存できます。" : mode === "recent" && !recent.length ? "説明を開くと、最近見た6件がここに並びます。" : "見つかりません。絞り込み解除で、全項目に戻れます。";
+    clearButton.hidden = !search.value && !category.value && mode === "all";
     updatePins();
   }
   function load(){
@@ -73,7 +86,7 @@
       row.className = "reference-item";
       const pin = document.createElement("button");
       pin.type = "button"; pin.className = "btn reference-pin";
-      const entry = {section, button, row, pin, title:title.textContent, text:section.textContent.normalize("NFKC").toLowerCase()};
+      const entry = {section, button, row, pin, title:title.textContent, group:group(section), text:section.textContent.normalize("NFKC").toLowerCase()};
       pin.onclick = () => {
         S.ui ||= {};
         const pins = new Set(Array.isArray(S.ui.referencePins) ? S.ui.referencePins.filter(x => typeof x === "string") : []);
@@ -81,10 +94,14 @@
         S.ui.referencePins = [...pins]; save();
         updatePins();
         showList();
+        if(entry.row.hidden) savedButton.focus({preventScroll:true});
       };
       button.onclick = () => {
         listScroll = list.scrollTop;
         active = entry;
+        S.ui ||= {};
+        S.ui.referenceRecent = [entry.title, ...history().filter(name => name !== entry.title)].slice(0,6);
+        save();
         entries.forEach(item => item.section.hidden = item !== entry);
         list.hidden = true; content.hidden = false; listButton.hidden = false;
         count.textContent = "説明を表示中";
@@ -122,9 +139,11 @@
   });
   window.addEventListener("hashchange", () => { if(dialog.open) dialog.close(); });
   search.oninput = () => { list.scrollTop = 0; showList(); };
-  allButton.onclick = () => { onlySaved = false; showList(); };
-  savedButton.onclick = () => { onlySaved = true; showList(); };
-  clearButton.onclick = () => { search.value = ""; showList(); search.focus({preventScroll:true}); };
+  allButton.onclick = () => { mode = "all"; showList(); };
+  savedButton.onclick = () => { mode = "saved"; showList(); };
+  recentButton.onclick = () => { mode = "recent"; showList(); };
+  category.onchange = () => { list.scrollTop = 0; showList(); };
+  clearButton.onclick = () => { search.value = ""; category.value = ""; mode = "all"; showList(); search.focus({preventScroll:true}); };
   dialog.addEventListener("keydown", event => {
     if(event.key === "Escape"){ event.preventDefault(); event.stopPropagation(); dialog.close(); }
   });
