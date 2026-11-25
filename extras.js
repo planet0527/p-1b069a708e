@@ -247,12 +247,13 @@ function heatmapHTML(){
   for(let i=0;i<pad0;i++) cells.push(`<i class="hm e"></i>`);
   for(let i=0;i<days;i++){
     const k = dstr(d), x = S.days[k], m = (S.minutes||{})[k] || 0;
-    const v = x ? (x.lesson||0) + (x.drill||0) + (x.game||0)*3 + (x.review||0) + (x.practice||0) + Math.floor(m/10) : 0;
+    const v = Math.max(activeOn(k) ? 1 : 0, (x?.lesson||0) + (x?.drill||0) + (x?.game||0)*3 + (x?.review||0) + (x?.practice||0) + Math.floor(m/10));
     const lv = v === 0 ? 0 : v < 5 ? 1 : v < 15 ? 2 : v < 30 ? 3 : 4;
     cells.push(`<i class="hm l${lv} ${k===today()?"t":""}" title="${k}"></i>`);
     d.setDate(d.getDate()+1);
   }
-  const active = Object.keys(S.days).filter(k => k >= dstr(new Date(Date.now()-days*86400000))).length;
+  const first = new Date(); first.setDate(first.getDate() - days + 1);
+  const active = [...new Set([...Object.keys(S.days), ...Object.keys(S.minutes || {})])].filter(k => k >= dstr(first) && k <= today() && activeOn(k)).length;
   return `<div class="row between"><h2>学習カレンダー</h2><span class="small muted num">12週間で${active}日</span></div>
     <div class="hmwrap"><div class="hmlabels small muted"><span>月</span><span></span><span>水</span><span></span><span>金</span><span></span><span>日</span></div><div class="hmgrid">${cells.join("")}</div></div>
     <div class="row small muted" style="justify-content:flex-end;gap:4px">少<i class="hm l1"></i><i class="hm l2"></i><i class="hm l3"></i><i class="hm l4"></i>多</div>`;
@@ -330,3 +331,4 @@ render = function(){ baseRender(); applyFont(); };
 window.removeEventListener("hashchange", baseRender);
 window.addEventListener("hashchange", render);
 render();
+

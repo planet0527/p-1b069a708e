@@ -152,9 +152,10 @@ ROUTES.lessons = function(){
 /* 回答済みのカードを最初から繰り返さず、未読のカードから再開する。
    同じ起動中のレッスンは、解説ページを含めてそのまま再開する。 */
 function nextLesson(){
-  if(LP && LP.i < LP.list.length){
-    const sec = secOf(LP.sec);
-    if(sec) return {sec:sec.id, label:`学習を続ける：${sec.title}（${LP.i+1}/${LP.list.length}枚）`, active:true};
+  const session = LP && LP.i < LP.list.length ? LP : restoreLessonSession(S.lessonSession);
+  if(session){
+    const sec = secOf(session.sec);
+    if(sec) return {sec:sec.id, label:`学習を続ける：${sec.title}（${session.i+1}/${session.list.length}枚）`, active:true, session};
   }
   const isRead = i => !!(S.cards[i]?.read ?? S.cards[i]?.seen);
   const section = roadOrder().find(s => secStats(s.id).idx.some(i => !isRead(i))) || currentSec();
@@ -167,7 +168,7 @@ function nextLesson(){
 }
 function resumeLesson(lesson){
   if(lesson.route){ go(lesson.route); return; }
-  if(!lesson.active) LP = {sec:lesson.sec, list:lesson.list, i:lesson.index, phase:"predict", res:[], xp:0, ok:false};
+  LP = lesson.active ? lesson.session : {sec:lesson.sec, list:lesson.list, i:lesson.index, phase:"predict", res:[], xp:0, ok:false};
   go("#lesson-" + lesson.sec);
 }
 

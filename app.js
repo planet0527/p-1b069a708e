@@ -59,6 +59,7 @@ const shuffle = a => { a = a.slice(); for(let i=a.length-1;i>0;i--){ const j=Mat
 const r = (n, d=4) => Math.round(n * 10**d) / 10**d;
 const fmt = n => typeof n === "number" ? (Number.isInteger(n) ? n.toLocaleString("ja-JP") : String(r(n))) : n;
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const searchKey = s => String(s).normalize("NFKC").toLowerCase().replace(/\s+/g, " ").trim();
 const reduceMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 function toast(msg){
@@ -136,12 +137,16 @@ function gainXP(n){
   save();
   checkBadges();
 }
-function markActive(){ day(); }
+function markActive(){ day().active = true; }
+function activeOn(k){
+  const d = S.days[k];
+  return !!(d?.active || ["lesson","drill","game","review","practice"].some(key => Number(d?.[key]) > 0) || Number(S.minutes?.[k]) > 0);
+}
 function streak(){
   let n = 0;
   const d = new Date();
-  if(!S.days[dstr(d)]) d.setDate(d.getDate()-1);   // 今日まだなら昨日から数える
-  while(S.days[dstr(d)]){ n++; d.setDate(d.getDate()-1); }
+  if(!activeOn(dstr(d))) d.setDate(d.getDate()-1);   // 今日まだなら昨日から数える
+  while(activeOn(dstr(d))){ n++; d.setDate(d.getDate()-1); }
   return n;
 }
 
@@ -422,7 +427,7 @@ function renderHome(){
   setupBackup();
   const resetBtn = $("#resetBtn");
   resetBtn.onclick = () => {
-    if(resetBtn.dataset.sure){ S = blank(); save(); render(); }
+    if(resetBtn.dataset.sure){ LP = null; S = blank(); save(); render(); }
     else { resetBtn.dataset.sure = "1"; resetBtn.textContent = "本当に消す場合はもう一度押す"; }
   };
   const showClock = () => { const s = Math.floor(timerMs()/1000); $("#clock").textContent = `${pad(Math.floor(s/3600))}:${pad(Math.floor(s/60)%60)}:${pad(s%60)}`; };
@@ -467,7 +472,7 @@ ROUTES.glossary = function(){
 function renderGlossary(){
   const p = document.createElement("section");
   p.className = "panel";
-  p.innerHTML = `<div class="row between"><h2>略語ずかん</h2><span class="small muted num">${GL_KEYS.length}語</span></div>
+  p.innerHTML = `<div class="row between"><h2>略語ずかん</h2><span class="small muted num" id="glCount" role="status"></span></div>
     <label class="small muted" for="glq">略語や意味で探す</label>
     <input id="glq" class="search" type="search" placeholder="例：SMTP、提案、クラウド" autocomplete="off">
     <div class="gloss" id="glList"></div>`;
@@ -475,8 +480,9 @@ function renderGlossary(){
   const list = p.querySelector("#glList"), input = p.querySelector("#glq");
   const keys = Object.keys(GLOSS).sort((a,b) => a.localeCompare(b, "en"));
   const draw = () => {
-    const q = input.value.trim().toLowerCase();
-    const hit = keys.filter(k => !q || (k + GLOSS[k].join(" ")).toLowerCase().includes(q));
+    const words = searchKey(input.value).split(" ").filter(Boolean);
+    const hit = keys.filter(k => words.every(word => searchKey(k + " " + GLOSS[k].join(" ")).includes(word)));
+    p.querySelector("#glCount").textContent = words.length ? `${hit.length} / ${keys.length}語` : `${keys.length}語`;
     list.innerHTML = hit.length ? hit.map(k => `<div><b>${esc(k)}</b><span>${esc(GLOSS[k][0])}<br><span class="muted">${esc(GLOSS[k][1])}</span></span></div>`).join("") : `<p class="small muted">見つかりませんでした</p>`;
   };
   input.addEventListener("input", draw);
@@ -484,14 +490,32 @@ function renderGlossary(){
 }
 
 /* ---------- レッスン（予想 → 解説） ---------- */
-let LP = null;
+function restoreLessonSession(raw){
+  if(!raw || typeof raw !== "object" || !secOf(raw.sec)) return null;
+  const list = secStats(raw.sec).idx;
+  if(!Array.isArray(raw.list) || raw.list.length !== list.length || raw.list.some((i,k) => i !== list[k])) return null;
+  if(!Number.isInteger(raw.i) || raw.i < 0 || raw.i >= list.length || !["predict","learn"].includes(raw.phase)) return null;
+  if(!Array.isArray(raw.res) || raw.res.length > list.length || raw.res.some(x => x !== null && typeof x !== "boolean")) return null;
+  const res = raw.res.map(x => x === null ? undefined : x);
+  // 回答直後に閉じた場合は、同じ問題への二重加点を避けて解説から再開。
+  const phase = typeof res[raw.i] === "boolean" ? "learn" : "predict";
+  return {sec:raw.sec, list, i:raw.i, phase, res, xp:Math.max(0, Number(raw.xp) || 0), ok:res[raw.i] === true};
+}
+let LP = restoreLessonSession(S.lessonSession);
+let lessonStorageReady = false;
+function checkpointLesson(){
+  S.lessonSession = LP && LP.i < LP.list.length ? {...LP, list:LP.list.slice(), res:Array.from(LP.res, x => typeof x === "boolean" ? x : null)} : null;
+  if(lessonStorageReady) save();
+}
 function renderLesson(id){
   const sec = secOf(id);
   if(!sec){ go("#lessons"); return; }
   app.style.setProperty("--sec", COLORS[id]);
   if(!LP || LP.sec !== id){
-    LP = {sec:id, list: secStats(id).idx, i:0, phase:"predict", res:[], xp:0, ok:false};
+    const saved = restoreLessonSession(S.lessonSession);
+    LP = saved?.sec === id ? saved : {sec:id, list: secStats(id).idx, i:0, phase:"predict", res:[], xp:0, ok:false};
   }
+  checkpointLesson();
   const n = LP.list.length;
   const prog = Math.min(n, LP.i + (LP.phase === "learn" ? 0.5 : 0)) / n * 100;
   const top = document.createElement("div");
@@ -519,6 +543,7 @@ function renderLesson(id){
       S.cards[idx] = {...prev, seen:true, read: !!(prev.read ?? prev.seen), ok: !!(prev.ok || ok)};
       if(!ok) toReview(idx);
       const g = ok ? 10 : 3; LP.xp += g; gainXP(g);
+      checkpointLesson();
       next.hidden = false;
       return `<p class="xp-pop">+${g} XP</p>${ok ? "" : "<p class='small'>この問題は復習ボックスに入れたよ。あとでもう一度出すね。</p>"}`;
     }, c.quiz.exp ? `<p>${gl(c.quiz.exp)}</p>` : ""));
@@ -945,6 +970,7 @@ function decodeRecord(t){
 }
 function applyRecord(d, msg){
   S = Object.assign(blank(), d); save();
+  LP = restoreLessonSession(S.lessonSession);
   toast("記録を戻しました");
   render();
 }
@@ -986,5 +1012,9 @@ function setupBackup(){
 /* ---------- 起動 ---------- */
 render();
 checkBadges();
-restoreFromIDB().then(changed => { if(changed) render(); else save(); });
+restoreFromIDB().then(changed => {
+  if(changed) LP = restoreLessonSession(S.lessonSession);
+  lessonStorageReady = true;
+  if(changed) render(); else save();
+});
 
