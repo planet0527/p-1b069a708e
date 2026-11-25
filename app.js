@@ -477,8 +477,9 @@ function renderHome(){
   setupBackup();
   const resetBtn = $("#resetBtn");
   resetBtn.onclick = () => {
-    if(resetBtn.dataset.sure){ resetLearningSessions(); S = blank(); save(); render(); }
-    else { resetBtn.dataset.sure = "1"; resetBtn.textContent = "本当に消す場合はもう一度押す"; }
+    const ok = window.confirm("学習記録、問題の正誤、模擬試験の履歴、メモなど、この端末に保存された記録をすべて削除します。必要な記録は先にバックアップしてください。削除しますか？");
+    if(!ok) return;
+    resetLearningSessions(); S = blank(); save(); render();
   };
   const showClock = () => { const s = Math.floor(timerMs()/1000); $("#clock").textContent = `${pad(Math.floor(s/3600))}:${pad(Math.floor(s/60)%60)}:${pad(s%60)}`; };
   showClock();
