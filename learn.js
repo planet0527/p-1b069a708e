@@ -79,20 +79,24 @@ function fcDeck(mode){
   return shuffle(list).sort((a,b) => b.f - a.f);
 }
 function renderCards(){
-  app.innerHTML = pageHead("単語カード", "用語を見て、意味を思い出してからタップでめくる。覚えたものは次から出なくなるよ。", "happy");
+  app.innerHTML = pageHead("単語カード", "用語から意味、説明から用語の2通りで練習できます。答えを思い出してからめくりましょう。", "happy");
   const p = document.createElement("section");
   p.className = "panel";
   app.appendChild(p);
   if(!FC){
     const cnt = m => fcDeck(m).length;
-    p.innerHTML = `<h2>どのカードで練習する？</h2><div class="fc-modes">
+    const direction = S.ui?.fcDirection === "reverse" ? "reverse" : "normal";
+    p.innerHTML = `<h2>出題の向き</h2><div class="chips" aria-label="単語カードの出題の向き"><button type="button" class="chipbtn" data-direction="normal" aria-pressed="${direction === "normal"}">用語 → 意味</button><button type="button" class="chipbtn" data-direction="reverse" aria-pressed="${direction === "reverse"}">説明 → 用語</button></div><p class="small muted">説明から用語名を答えると、問題文から言葉を思い出す練習になります。「覚えた」のチェックは両方の向きで共通です。</p><h2>どのカードで練習する？</h2><div class="fc-modes">
       ${[["hot","★★★ よく出る","まだ覚えていない★★★"],["new","NEW","新しく増えた分野"],["all","すべて","まだ覚えていない全部"],["bm","ブックマーク","あとで見るに保存した用語"]]
         .map(([k,l,s])=>`<button type="button" class="fc-mode" data-m="${k}"><b>${l}</b><span class="small muted">${s}</span><span class="pill num">${cnt(k)}枚</span></button>`).join("")}
     </div>`;
+    p.querySelectorAll("[data-direction]").forEach(b => b.onclick = () => {
+      S.ui ||= {}; S.ui.fcDirection = b.dataset.direction; save(); render();
+    });
     p.querySelectorAll("[data-m]").forEach(b => b.onclick = () => {
       const deck = fcDeck(b.dataset.m);
       if(!deck.length){ toast(b.dataset.m === "bm" ? "ブックマークした用語はまだありません" : "このカードは全部覚えました！"); return; }
-      FC = {deck, i:0, flip:false, known:0, mode:b.dataset.m};
+      FC = {deck, i:0, flip:false, known:0, mode:b.dataset.m, direction:S.ui?.fcDirection === "reverse" ? "reverse" : "normal"};
       render();
     });
     const lis = document.createElement("section");
@@ -109,19 +113,20 @@ function renderCards(){
     p.style.alignItems = "center"; p.style.textAlign = "center";
     p.innerHTML = `${mascot("happy","bob")}<span class="phase">1周おわり！</span><span class="big">${FC.known}<span style="font-size:22px"> 枚</span></span><p>今回「覚えた」にした数</p>`;
     const b = document.createElement("button"); b.type="button"; b.className="btn primary wide"; b.textContent="もう1周する";
-    b.onclick = () => { const deck = fcDeck(FC.mode); if(!deck.length){ FC = null; render(); return; } FC = {deck, i:0, flip:false, known:0, mode:FC.mode}; render(); };
+    b.onclick = () => { const deck = fcDeck(FC.mode); if(!deck.length){ FC = null; render(); return; } FC = {deck, i:0, flip:false, known:0, mode:FC.mode, direction:FC.direction}; render(); };
     const b2 = document.createElement("button"); b2.type="button"; b2.className="btn wide"; b2.textContent="カードの種類を選び直す"; b2.onclick=()=>{ FC = null; render(); };
     p.append(b, b2);
     return;
   }
   const t = FC.deck[FC.i], cat = TCATS.find(c => c.id === t.c);
+  const reverse = FC.direction === "reverse";
   p.style.setProperty("--c", cat.color);
-  p.innerHTML = `<div class="row between"><span class="small muted num">${FC.i+1} / ${FC.deck.length}</span>${bmBtn("t:" + t.t)}</div>
+  p.innerHTML = `<div class="row between"><span class="small muted num">${FC.i+1} / ${FC.deck.length} ・ ${reverse ? "説明 → 用語" : "用語 → 意味"}</span>${bmBtn("t:" + t.t)}</div>
     <button type="button" class="fc ${FC.flip ? "back" : ""}" id="fcCard" aria-label="${FC.flip ? "表に戻す" : "めくって答えを見る"}">
       <span class="tcat">${cat.name}</span>
-      <b class="fc-term">${t.t}</b>
-      <span class="small muted">${t.y}</span>
-      ${FC.flip ? `<figure class="tfig" style="width:100%">${TFig(t.fig, cat.color)}</figure><span class="fc-desc">${glosser()(t.d)}</span>${t.ex ? `<span class="tex" style="text-align:left;width:100%"><span class="klbl">具体例</span>${glosser()(t.ex)}</span>` : ""}<span class="tkey"><span class="klbl">見分け方</span>${glosser()(t.k)}</span>` : `<span class="fc-hint">意味を思い出したら、タップしてめくる</span>`}
+      <b class="fc-term">${reverse && !FC.flip ? "この説明が表す用語は？" : esc(t.t)}</b>
+      ${!reverse || FC.flip ? `<span class="small muted">${esc(t.y)}</span>` : ""}
+      ${FC.flip ? `<figure class="tfig" style="width:100%">${TFig(t.fig, cat.color)}</figure><span class="fc-desc">${glosser()(t.d)}</span>${t.ex ? `<span class="tex" style="text-align:left;width:100%"><span class="klbl">具体例</span>${glosser()(t.ex)}</span>` : ""}<span class="tkey"><span class="klbl">見分け方</span>${glosser()(t.k)}</span>` : reverse ? `<span class="fc-desc">${glosser()(t.d.split(t.t).join("この用語"))}</span><span class="fc-hint">用語名を思い出したら、タップしてめくる</span>` : `<span class="fc-hint">意味を思い出したら、タップしてめくる</span>`}
     </button>
     ${FC.flip ? usageHTML(t) : ""}
     <div class="fc-btns" ${FC.flip ? "" : 'style="visibility:hidden"'}>
