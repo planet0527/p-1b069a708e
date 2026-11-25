@@ -126,6 +126,46 @@ ROUTES.lessons = function(){
   ].filter(Boolean));
 };
 
+/* ステージの中身をドロップダウンで確認する */
+const STAGE_OPEN = new Set();
+function addStageDrop(btn, s){
+  const t = secStats(s.id);
+  const wrap = document.createElement("div");
+  wrap.className = "stage";
+  wrap.style.setProperty("--c", COLORS[s.id]);
+  btn.replaceWith(wrap);
+  wrap.appendChild(btn);
+  const tg = document.createElement("button");
+  tg.type = "button"; tg.className = "stage-tg";
+  const body = document.createElement("ol");
+  body.className = "stage-body";
+  body.id = "stage-" + s.id;
+  tg.setAttribute("aria-controls", body.id);
+  const set = open => {
+    body.hidden = !open;
+    tg.setAttribute("aria-expanded", open);
+    tg.innerHTML = `<span>${open ? "閉じる" : "このステージの中身を見る"}</span><span class="small num">${t.done}/${t.total} 理解</span><span class="caret">▾</span>`;
+    open ? STAGE_OPEN.add(s.id) : STAGE_OPEN.delete(s.id);
+  };
+  tg.onclick = () => set(body.hidden);
+  t.idx.forEach((ci, k) => {
+    const c = CARDS[ci], ok = learned(ci);
+    const li = document.createElement("li");
+    li.innerHTML = `<button type="button" class="${ok ? "ok" : ""}"><span class="st-mark">${ok ? "✓" : k + 1}</span><span class="st-t">${c.title}</span>${c.intro ? '<span class="st-tag">入門</span>' : '<span class="st-tag ex">試験</span>'}<span class="st-go">›</span></button>`;
+    li.firstChild.onclick = () => {
+      LP = {sec: s.id, list: t.idx, i: k, phase: "predict", res: [], xp: 0, ok: false};
+      go("#lesson-" + s.id);
+    };
+    body.appendChild(li);
+  });
+  const foot = document.createElement("li");
+  foot.className = "stage-foot";
+  foot.innerHTML = `<span class="small muted">✓ は理解済み。タップでそのカードから始められます</span>`;
+  body.appendChild(foot);
+  wrap.append(tg, body);
+  set(STAGE_OPEN.has(s.id));
+}
+
 /* レッスン一覧のステージにも、入門カードの数を見せる */
 const baseRender4 = render;
 render = function(){
@@ -137,6 +177,7 @@ render = function(){
       const pill = b.querySelector(".pill");
       if(pill && n) pill.textContent = `入門${n}＋${CARDS.filter(c => c.sec === s.id).length - n}枚`;
       b.insertAdjacentHTML("afterbegin", `<span class="stage-no num">${i+1}</span>`);
+      addStageDrop(b, s);
     });
   }
 };

@@ -392,6 +392,24 @@ button.chip-lg{cursor:pointer;background:rgba(255,255,255,.28)}
 .stage-no{grid-row:span 3;grid-column:1;display:none}
 .sec{position:relative}
 .sec .stage-no{display:grid;position:absolute;left:-6px;top:-6px;width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--paper);font-size:12px;font-weight:700;place-items:center}
+.stage{display:flex;flex-direction:column;background:var(--card);border:2px solid var(--line);border-radius:20px;box-shadow:0 3px 0 var(--line);position:relative}
+.stage>.sec{border:0;box-shadow:none;background:none;border-radius:20px 20px 0 0}
+.stage-tg{display:flex;align-items:center;gap:8px;border:0;border-top:1px dashed var(--line);background:none;padding:10px 14px;font:inherit;font-weight:700;font-size:14px;color:var(--c);cursor:pointer;text-align:left}
+.stage-tg span:first-child{flex:1}
+.stage-tg .small{color:var(--muted);font-weight:400}
+.stage-tg .caret{transition:transform .2s;font-size:13px}
+.stage-tg[aria-expanded="true"] .caret{transform:rotate(180deg)}
+.stage-body{list-style:none;margin:0;padding:0 10px 10px;display:flex;flex-direction:column;gap:6px}
+.stage-body[hidden]{display:none}
+.stage-body button{width:100%;display:flex;align-items:center;gap:10px;border:1px solid var(--line);background:var(--paper);border-radius:12px;padding:9px 10px;font:inherit;font-size:14px;color:var(--ink);text-align:left;cursor:pointer}
+.stage-body button.ok{background:color-mix(in srgb,var(--good) 10%,var(--card))}
+.st-mark{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;background:var(--card);border:2px solid var(--c);color:var(--c)}
+button.ok .st-mark{background:var(--good);border-color:var(--good);color:#fff}
+.st-t{flex:1;line-height:1.4}
+.st-tag{flex:none;font-size:11px;font-weight:700;padding:2px 7px;border-radius:99px;background:color-mix(in srgb,var(--c) 15%,transparent);color:var(--c)}
+.st-tag.ex{background:var(--line);color:var(--muted)}
+.st-go{color:var(--muted);font-size:18px}
+.stage-foot{padding:2px 4px 0}
 .legend{display:grid;gap:4px;color:var(--muted)}
 .stars{color:#e3a008;letter-spacing:1px;font-size:14px}
 .stars .off{color:var(--line)}
@@ -485,19 +503,19 @@ svg .lnr{stroke:var(--bad);stroke-width:2;fill:none;stroke-dasharray:5 4}
   </div>
 </nav>
 
-<script src="data.js?v=8"></script>
-<script src="visuals.js?v=8"></script>
-<script src="glossary.js?v=8"></script>
-<script src="terms.js?v=8"></script>
-<script src="terms2.js?v=8"></script>
-<script src="dbterms.js?v=8"></script>
-<script src="lessons2.js?v=8"></script>
-<script src="guide.js?v=8"></script>
-<script src="questions.js?v=8"></script>
-<script src="app.js?v=8"></script>
-<script src="extras.js?v=8"></script>
-<script src="learn.js?v=8"></script>
-<script src="layout.js?v=8"></script>
+<script src="data.js?v=9"></script>
+<script src="visuals.js?v=9"></script>
+<script src="glossary.js?v=9"></script>
+<script src="terms.js?v=9"></script>
+<script src="terms2.js?v=9"></script>
+<script src="dbterms.js?v=9"></script>
+<script src="lessons2.js?v=9"></script>
+<script src="guide.js?v=9"></script>
+<script src="questions.js?v=9"></script>
+<script src="app.js?v=9"></script>
+<script src="extras.js?v=9"></script>
+<script src="learn.js?v=9"></script>
+<script src="layout.js?v=9"></script>
 <script>if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});</script>
 </body>
 </html>
