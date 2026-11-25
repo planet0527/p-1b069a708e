@@ -332,13 +332,28 @@ ORDER BY o.order_id;</code></pre>
   );
 
 
+  /* 初めての人が迷わないよう、試験の基本 → よく使うコツ → 深く理解する の順に並べ替える */
+  const BASIC_ORDER = ["まず試験の形を知る","90分の使い方：3周作戦","点を取りやすい分野から固める","迷ったら、今の状態から選ぼう","選択肢の消し方",
+    "計算問題は「型」で解く","覚えておくと一瞬で解ける数字","「誰の鍵？」は1行で覚える","まぎらわしい用語の見分け表","問題文のキーワード → 答え","略語は分解すれば読める"];
+  const LAST = "前日と当日のチェックリスト";
+  const allSecs = [...host.querySelectorAll("section.guide")];
+  const titleOf = s => s.querySelector("h2").textContent;
+  const basics = BASIC_ORDER.map(t => allSecs.find(s => titleOf(s) === t)).filter(Boolean);
+  const lastSec = allSecs.find(s => titleOf(s) === LAST);
+  const deeper = allSecs.filter(s => !basics.includes(s) && s !== lastSec);
+  const groupHead = (no, title, sub) => { const h = document.createElement("div"); h.className = "guide-group"; h.innerHTML = `<span class="num">${no}</span><div><b>${title}</b><small>${sub}</small></div>`; return h; };
+  host.append(groupHead("1", "まずはここから", "試験の形と、点の取り方のコツ"), ...basics,
+    groupHead("2", "もっと深く理解する", "図を動かしたり、例で確かめたりする"), ...deeper,
+    ...(lastSec ? [groupHead("3", "試験の直前に", "前日と当日の確認"), lastSec] : []));
   const guideSections = [...host.querySelectorAll("section.guide")];
+  const nBasic = basics.length, nDeep = deeper.length;
   const guideMenu = guideSections.map((section, i) => {
     const heading = section.querySelector("h2");
     heading.tabIndex = -1;
-    return `<button type="button" class="btn" data-guide-jump="${i}">${esc(heading.textContent)}</button>`;
+    const label = i === 0 ? '<p class="guide-index-group">1 まずはここから</p>' : i === nBasic ? '<p class="guide-index-group">2 もっと深く理解する</p>' : i === nBasic + nDeep ? '<p class="guide-index-group">3 試験の直前に</p>' : "";
+    return `${label}<button type="button" class="btn" data-guide-jump="${i}">${esc(heading.textContent)}</button>`;
   }).join("");
-  guideSections[0]?.insertAdjacentHTML("beforebegin", `<nav class="panel guide-index" aria-label="攻略ガイドの目次"><h2>読みたい項目を選ぶ</h2><p class="small muted">目的の説明へ移動します。ページ上部の「項目一覧へ」で、ここへ戻れます。</p><details class="usage"><summary>目次を開く</summary><div class="usage-body guide-index-list">${guideMenu}</div></details></nav><button type="button" class="btn guide-index-back">↑ 項目一覧へ</button>`);
+  host.querySelector(".guide-group")?.insertAdjacentHTML("beforebegin", `<nav class="panel guide-index" aria-label="攻略ガイドの目次"><h2>読みたい項目を選ぶ</h2><p class="small muted">目的の説明へ移動します。右下の「↑ 目次」で、いつでもここへ戻れます。</p><details class="usage"><summary>目次を開く</summary><div class="usage-body guide-index-list">${guideMenu}</div></details></nav><button type="button" class="guide-index-back" aria-label="目次へ戻る">↑ 目次</button>`);
   const guideIndex = host.querySelector(".guide-index");
   guideIndex?.insertAdjacentHTML("afterbegin", '<label class="guide-search">説明を探す<input type="search" data-guide-search placeholder="例：単位、SQL、認証"></label><p class="small muted" data-guide-count role="status"></p>');
   const guideSearch = host.querySelector("[data-guide-search]");
