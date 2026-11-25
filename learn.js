@@ -155,6 +155,15 @@ function listenVolume(){
   const value = S.ui?.listenVolume;
   return typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 1 ? value : 1;
 }
+function listenContent(){
+  const value = S.ui?.listenContent;
+  return ["term","basic","full"].includes(value) ? value : "full";
+}
+function listenText(t){
+  if(listenContent() === "term") return plain(t.t);
+  const basic = `${plain(t.t)}。${plain(t.d)}。`;
+  return listenContent() === "basic" ? basic : `${basic}見分け方。${plain(t.k)}`;
+}
 function stopListen(){
   listenToken++;
   if(listenTimer !== null){ clearTimeout(listenTimer); listenTimer = null; }
@@ -189,7 +198,7 @@ function listenList(){
 }
 function renderListen(){
   if(!LS.list) LS.list = listenList();
-  app.innerHTML = pageHead("聞き流しモード", "用語 → 説明 → 見分け方の順に読み上げて、自動で次へ進むよ。", "happy");
+  app.innerHTML = pageHead("聞き流しモード", "読み上げる内容・速さ・音量を選んで聞けます。再生中は自動で次の用語へ進みます。", "happy");
   const p = document.createElement("section");
   p.className = "panel";
   app.appendChild(p);
@@ -205,6 +214,7 @@ function renderListen(){
       <button type="button" class="btn" id="lsNext" aria-label="次の用語" ${!supported || !t ? "disabled" : ""}>⏭</button>
     </div>
     <div class="setrow"><span>速さ</span><div class="chips">${[[0.8,"ゆっくり"],[1,"ふつう"],[1.3,"速め"]].map(([r,l])=>`<button type="button" class="chipbtn" data-r="${r}" aria-pressed="${LS.rate===r}">${l}</button>`).join("")}</div></div>
+    <div class="setrow"><label for="lsContent">読み上げ内容</label><select id="lsContent" class="listen-select" ${!supported ? "disabled" : ""}>${[["term","用語だけ"],["basic","用語と説明"],["full","見分け方まで"]].map(([value,label])=>`<option value="${value}" ${listenContent() === value ? "selected" : ""}>${label}</option>`).join("")}</select></div>
     <div class="setrow"><label for="lsVolume">音声音量</label><div class="volume-control"><input type="range" id="lsVolume" min="0" max="100" step="5" value="${Math.round(listenVolume()*100)}" ${!supported ? "disabled" : ""}><output id="lsVolumeValue" for="lsVolume">${Math.round(listenVolume()*100)}%</output></div></div>
     <p class="small muted">0%で消音。端末本体の音量と組み合わせて調整してください。</p>
     <p class="small muted">画面を消すと止まる端末があります。止まったら再生を押し直してね。</p>`;
@@ -213,13 +223,18 @@ function renderListen(){
     const token = ++listenToken;
     if(listenTimer !== null){ clearTimeout(listenTimer); listenTimer = null; }
     const t = LS.list[LS.i % LS.list.length];
-    speak(`${plain(t.t)}。${plain(t.d)}。見分け方。${plain(t.k)}`, () => {
+    speak(listenText(t), () => {
       if(!LS.playing || token !== listenToken) return;
       listenTimer = setTimeout(() => { listenTimer = null; if(!LS.playing || token !== listenToken || location.hash !== "#listen") return; LS.i = (LS.i+1) % LS.list.length; render(); play(); }, 900);
     });
   };
   p.querySelectorAll("[data-m]").forEach(b => b.onclick = () => { stopListen(); LS.mode = b.dataset.m; LS.list = listenList(); LS.i = 0; render(); });
   p.querySelectorAll("[data-r]").forEach(b => b.onclick = () => { const playing = LS.playing; stopListen(); LS.rate = +b.dataset.r; LS.playing = playing; if(playing) play(); render(); });
+  const contentSelect = $("#lsContent");
+  if(contentSelect) contentSelect.onchange = () => {
+    S.ui ||= {}; S.ui.listenContent = contentSelect.value; save();
+    if(LS.playing){ stopListen(); LS.playing = true; play(); }
+  };
   const volume = $("#lsVolume");
   if(volume){
     volume.oninput = () => {
