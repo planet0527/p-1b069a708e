@@ -168,6 +168,49 @@ function renderGuide(){
     <details class="usage"><summary>確認：署名が正しく検証できれば、文書は暗号化されている？</summary><div class="usage-body"><p><b>答え：暗号化されているとは限りません</b>署名は署名者や内容の改変を確かめるためのもの。第三者に内容を読まれないようにするには、別に適切な暗号化などを組み合わせます。</p></div></details>
     <button type="button" class="btn wide" data-go="#practice">役割の違いを問題演習で確かめる</button>`) +
 
+
+  sec("小さな注文表で、SQLの結果を読む", "データベース", `
+    <p>最初に「1行が何を表すか」を確認しましょう。この注文表は1行が1件の注文です。同じ会員が何度も注文するので、会員IDは重複します。</p>
+    <div class="guide-table-wrap" role="region" aria-label="例に使う注文表" tabindex="0"><table class="guide-table"><caption>注文表 orders（金額は円）</caption><thead><tr><th scope="col">order_id</th><th scope="col">member_id</th><th scope="col">amount</th></tr></thead><tbody><tr><td>101</td><td>A</td><td>500</td></tr><tr><td>102</td><td>A</td><td>1,200</td></tr><tr><td>103</td><td>B</td><td>800</td></tr><tr><td>104</td><td>B</td><td>800</td></tr></tbody></table></div>
+    <p class="small muted">order_id＝注文ID、member_id＝会員ID、amount＝注文金額。以下はこの4件だけを使う練習です。</p>
+    <details class="usage"><summary>① WHEREとSELECT：どの行から、どの列を出す？</summary><div class="usage-body">
+      <pre class="guide-sql"><code>SELECT order_id, amount
+FROM orders
+WHERE amount &gt;= 800
+ORDER BY order_id;</code></pre>
+      <p><b>結果：102・1,200円、103・800円、104・800円の3行</b>WHEREで金額が800円以上の行を残し、SELECTで注文IDと金額の列を出します。ORDER BYで注文IDの順に並べます。</p>
+      <p>SELECTはSQL文のキーワードです。関係代数で「条件に合う行を取り出す」操作を選択、「列を取り出す」操作を射影と呼ぶこととは、名前を分けて理解しましょう。</p>
+      <p class="small muted">ORDER BYがない場合、結果の並び順は保証されません。表の上から順に返ると思い込まないようにします。</p>
+    </div></details>
+    <details class="usage"><summary>② GROUP BYとHAVING：注文を会員ごとにまとめると？</summary><div class="usage-body">
+      <pre class="guide-sql"><code>SELECT member_id, SUM(amount) AS total
+FROM orders
+GROUP BY member_id
+HAVING SUM(amount) &gt;= 1700
+ORDER BY member_id;</code></pre>
+      <p><b>結果：会員A、合計1,700円の1行</b>Aは500＋1,200＝1,700円、Bは800＋800＝1,600円。GROUP BYで会員ごとに分けて合計し、HAVINGで合計1,700円以上のグループを残します。</p>
+      <p><b>WHEREとの違い</b>WHEREは集計前の行、HAVINGは集計後のグループに条件を付けます。先にWHERE amount &gt;= 800を追加すると、Aの500円が集計から外れ、Aは1,200円、Bは1,600円。どちらもHAVINGを満たさず、結果は0行になります。</p>
+      <p class="small muted">学習では「表を読む → WHEREで行を絞る → GROUP BYでまとめる → HAVINGでグループを絞る → 出す列を選ぶ → 並べる」と考えます。データベース内部の実行手順そのものを表すわけではありません。</p>
+    </div></details>
+    <details class="usage"><summary>③ 主キーと外部キー：同じ会員IDが2回あってもよい？</summary><div class="usage-body">
+      <p><b>注文表の主キーはorder_id</b>この例では注文を一意に識別するIDです。主キーは重複もNULLも許しません。会員IDでは、Aの注文が2件あるので1件を特定できません。</p>
+      <p><b>会員表 membersが別にあるとします</b>会員表の主キーmember_idに、A＝あおい、B＝ひなたが登録されているとします。注文表のmember_idをそれへの外部キーにすれば、どの会員の注文かを対応付けられます。注文側のAやBは何回現れても構いません。</p>
+      <pre class="guide-sql"><code>SELECT o.order_id, m.name
+FROM orders AS o
+JOIN members AS m
+  ON o.member_id = m.member_id
+ORDER BY o.order_id;</code></pre>
+      <p><b>結合した結果</b>101＝あおい、102＝あおい、103＝ひなた、104＝ひなた。注文と会員は「何行目か」ではなく、IDが一致するかで結びます。</p>
+      <p class="small muted">外部キー制約は、参照先に存在しないIDを入れる矛盾を防ぎます。外部キー自体の重複を禁止するものではありません。NULLも禁止したい場合はNOT NULLなどの指定が必要です。</p>
+    </div></details>
+    <details class="usage"><summary>確認：会員Bの金額800円の注文は、1件？ 2件？</summary><div class="usage-body">
+      <p><b>答え：2件</b>注文ID103と104は別の注文です。金額が同じでも、勝手に1行へまとめません。COUNT(*)で会員Bの注文を数えると2件、SUM(amount)なら1,600円です。</p>
+      <p>SELECT DISTINCT amount FROM orders WHERE member_id = 'B' は「異なる金額」を出すので、800の1行になります。「注文が何件あるか」と「金額の種類がいくつあるか」は別の質問です。</p>
+      <p class="small muted">補足：COUNT(*)は行数、COUNT(列名)はその列がNULLでない行数を数えます。NULLを0や空文字と同じ値として扱わないようにしましょう。</p>
+    </div></details>
+    <p class="small muted">参考：PostgreSQL公式 <a href="https://www.postgresql.org/docs/current/tutorial-agg.html" target="_blank" rel="noopener noreferrer">集計</a> ／ <a href="https://www.postgresql.org/docs/current/ddl-constraints.html" target="_blank" rel="noopener noreferrer">制約とキー</a></p>
+    <button type="button" class="btn wide" data-go="#lessons">データベースのレッスンを選ぶ</button>`) +
+
   sec("まず試験の形を知る", "基本", `
     <div class="gstats">
       <div><b class="num">60</b><span>問</span><small>四肢択一</small></div>
