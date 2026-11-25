@@ -64,10 +64,15 @@
     const recent = history();
     entries.forEach((entry, i) => {
       const visible = (mode !== "saved" || pinned(entry.title)) && (mode !== "recent" || recent.includes(entry.title)) && (!category.value || entry.group === category.value) && words.every(word => entry.text.includes(word));
-      entry.row.style.order = String(mode === "recent" ? (recent.indexOf(entry.title) < 0 ? entries.length : recent.indexOf(entry.title)) : i);
+      
       entry.row.hidden = !visible;
       if(visible) matches++;
     });
+    const ordered = mode === "recent" ? [...entries].sort((a,b) => {
+      const ai = recent.indexOf(a.title), bi = recent.indexOf(b.title);
+      return (ai < 0 ? entries.length : ai) - (bi < 0 ? entries.length : bi);
+    }) : entries;
+    ordered.forEach(entry => list.appendChild(entry.row));
     count.textContent = matches ? matches + "件から選べます" : mode === "saved" && !entries.some(entry => pinned(entry.title)) ? "☆を押すと、よく見る項目をここに保存できます。" : mode === "recent" && !recent.length ? "説明を開くと、最近見た6件がここに並びます。" : "見つかりません。絞り込み解除で、全項目に戻れます。";
     clearButton.hidden = !search.value && !category.value && mode === "all";
     updatePins();
