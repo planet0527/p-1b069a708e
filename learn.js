@@ -126,11 +126,16 @@ function renderCards(){
     <div class="fc-btns" ${FC.flip ? "" : 'style="visibility:hidden"'}>
       <button type="button" class="btn" id="fcNo">まだ</button>
       <button type="button" class="btn primary" id="fcYes">覚えた！</button>
-    </div>`;
+    </div>
+    <button type="button" class="btn wide" id="fcChange">カードの種類を選び直す</button>`;
+  $("#fcChange").onclick = () => { FC = null; render(); };
   wireBm(p);
   $("#fcCard").onclick = () => { FC.flip = !FC.flip; render(); };
+  let advanced = false;
   const next = known => {
-    if(known){ S.terms ||= {}; S.terms[t.t] = true; FC.known++; gainXP(2); }
+    if(advanced) return;
+    advanced = true;
+    if(known){ S.terms ||= {}; const fresh = !S.terms[t.t]; S.terms[t.t] = true; if(fresh){ FC.known++; gainXP(2); } }
     else FC.deck.push(t);
     save(); FC.i++; FC.flip = false; render();
   };
@@ -139,8 +144,17 @@ function renderCards(){
 
 /* ---------- 聞き流し（読み上げ） ---------- */
 let LS = {mode:"hot", i:0, playing:false, rate:1, list:null};
+let listenToken = 0, listenTimer = null;
+function stopListen(){
+  listenToken++;
+  if(listenTimer !== null){ clearTimeout(listenTimer); listenTimer = null; }
+  LS.playing = false;
+  try { speechSynthesis.cancel(); } catch(e){}
+}
+window.addEventListener("pagehide", stopListen);
 function plain(s){ return String(s).replace(/<[^>]+>/g, "").replace(/[★☆]/g, ""); }
 function speak(text, onend){
+  const token = listenToken;
   try {
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
@@ -148,8 +162,13 @@ function speak(text, onend){
     const v = speechSynthesis.getVoices().find(v => v.lang && v.lang.startsWith("ja"));
     if(v) u.voice = v;
     u.onend = onend;
+    u.onerror = e => {
+      if(token !== listenToken || ["canceled","interrupted"].includes(e.error)) return;
+      stopListen(); toast("読み上げを再生できませんでした。再生を押してやり直してください");
+      if(location.hash === "#listen") render();
+    };
     speechSynthesis.speak(u);
-  } catch(e){ toast("この端末では読み上げが使えません"); LS.playing = false; }
+  } catch(e){ stopListen(); toast("この端末では読み上げが使えません"); if(location.hash === "#listen") render(); }
 }
 function listenList(){
   let l = TERMS.slice();
@@ -171,24 +190,26 @@ function renderListen(){
     ${!supported ? `<p class="small" style="color:var(--bad)">この端末・ブラウザは読み上げに対応していません。</p>` : ""}
     ${t ? `<div class="ls-now"><span class="small muted num">${(LS.i % LS.list.length)+1} / ${LS.list.length}</span><b>${t.t}</b><span>${t.d}</span></div>` : `<p>この種類の用語はありません。</p>`}
     <div class="ls-ctrl">
-      <button type="button" class="btn" id="lsPrev" aria-label="前の用語">⏮</button>
-      <button type="button" class="btn primary" id="lsPlay">${LS.playing ? "一時停止" : "再生"}</button>
-      <button type="button" class="btn" id="lsNext" aria-label="次の用語">⏭</button>
+      <button type="button" class="btn" id="lsPrev" aria-label="前の用語" ${!supported || !t ? "disabled" : ""}>⏮</button>
+      <button type="button" class="btn primary" id="lsPlay" ${!supported || !t ? "disabled" : ""}>${LS.playing ? "一時停止" : "再生"}</button>
+      <button type="button" class="btn" id="lsNext" aria-label="次の用語" ${!supported || !t ? "disabled" : ""}>⏭</button>
     </div>
     <div class="setrow"><span>速さ</span><div class="chips">${[[0.8,"ゆっくり"],[1,"ふつう"],[1.3,"速め"]].map(([r,l])=>`<button type="button" class="chipbtn" data-r="${r}" aria-pressed="${LS.rate===r}">${l}</button>`).join("")}</div></div>
     <p class="small muted">画面を消すと止まる端末があります。止まったら再生を押し直してね。</p>`;
   const play = () => {
     if(!LS.list.length) return;
+    const token = ++listenToken;
+    if(listenTimer !== null){ clearTimeout(listenTimer); listenTimer = null; }
     const t = LS.list[LS.i % LS.list.length];
     speak(`${plain(t.t)}。${plain(t.d)}。見分け方。${plain(t.k)}`, () => {
-      if(!LS.playing) return;
-      setTimeout(() => { if(!LS.playing) return; LS.i++; if(location.hash === "#listen") render(); play(); }, 900);
+      if(!LS.playing || token !== listenToken) return;
+      listenTimer = setTimeout(() => { listenTimer = null; if(!LS.playing || token !== listenToken || location.hash !== "#listen") return; LS.i = (LS.i+1) % LS.list.length; render(); play(); }, 900);
     });
   };
-  p.querySelectorAll("[data-m]").forEach(b => b.onclick = () => { LS.mode = b.dataset.m; LS.list = listenList(); LS.i = 0; LS.playing = false; try { speechSynthesis.cancel(); } catch(e){} render(); });
-  p.querySelectorAll("[data-r]").forEach(b => b.onclick = () => { LS.rate = +b.dataset.r; render(); });
-  $("#lsPlay").onclick = () => { if(!supported) return; LS.playing = !LS.playing; if(LS.playing) play(); else try { speechSynthesis.cancel(); } catch(e){} render(); };
-  $("#lsNext").onclick = () => { LS.i++; if(LS.playing) play(); render(); };
+  p.querySelectorAll("[data-m]").forEach(b => b.onclick = () => { stopListen(); LS.mode = b.dataset.m; LS.list = listenList(); LS.i = 0; render(); });
+  p.querySelectorAll("[data-r]").forEach(b => b.onclick = () => { const playing = LS.playing; stopListen(); LS.rate = +b.dataset.r; LS.playing = playing; if(playing) play(); render(); });
+  $("#lsPlay").onclick = () => { if(!supported || !LS.list.length) return; if(LS.playing) stopListen(); else { LS.playing = true; play(); } render(); };
+  $("#lsNext").onclick = () => { if(!LS.list.length) return; LS.i = (LS.i+1) % LS.list.length; if(LS.playing) play(); render(); };
   $("#lsPrev").onclick = () => { LS.i = Math.max(0, LS.i-1); if(LS.playing) play(); render(); };
 }
 
@@ -279,7 +300,7 @@ ROUTES.listen = renderListen;
 
 const renderBase3 = render;
 render = function(){
-  if((location.hash || "") !== "#listen" && LS.playing){ LS.playing = false; try { speechSynthesis.cancel(); } catch(e){} }
+  if((location.hash || "") !== "#listen" && LS.playing) stopListen();
   renderBase3();
   updateMemoFab();
   const v = (location.hash || "#home").slice(1);
@@ -291,3 +312,4 @@ window.removeEventListener("hashchange", renderBase3);
 window.addEventListener("hashchange", render);
 setupMemo();
 render();
+

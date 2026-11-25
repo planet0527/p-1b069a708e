@@ -327,6 +327,20 @@ function quiz(q, opts, ans, onAnswer, expHTML, previousChoice){
    画面
    ========================================================= */
 let tick = null;
+let screenTrail = [], activeRoute = "#home";
+function trackScreen(route){
+  if(route === activeRoute) return;
+  const earlier = screenTrail.lastIndexOf(route);
+  if(earlier >= 0) screenTrail.splice(earlier);
+  else screenTrail.push(activeRoute);
+  activeRoute = route;
+}
+function previousScreen(){ return screenTrail[screenTrail.length-1] || "#home"; }
+function screenName(route){
+  const names = {home:"ホーム",lessons:"レッスン一覧",drill:"計算ドリル",game:"仕分けゲーム",review:"復習ボックス",test:"ボス戦",terms:"用語ずかん",glossary:"略語ずかん",guide:"攻略ガイド",practice:"問題演習",notebook:"間違いノート",cards:"単語カード",listen:"聞き流し",mock:"模擬試験","mock-result":"模擬試験の結果"};
+  const key = route.slice(1);
+  return key.startsWith("lesson-") ? "レッスン" : names[key] || "ホーム";
+}
 function clearTick(){ if(tick){ clearInterval(tick); tick = null; } }
 
 const ROUTES = {home:renderHome, lessons:renderLessons, drill:renderDrill, game:renderGame, review:renderReview, test:renderTest, terms:renderTerms, guide:renderGuide, practice:renderPractice};
@@ -341,7 +355,19 @@ function render(){
   document.querySelectorAll(".tabs button").forEach(b => { if(b.dataset.tab === tab) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current"); });
   app.innerHTML = "";
   app.style.removeProperty("--sec");
+  const requestedHash = location.hash;
   fn();
+  if(location.hash !== requestedHash) return;
+  trackScreen("#" + v);
+  if(v !== "home"){
+    const target = previousScreen(), name = screenName(target);
+    const back = document.createElement("button");
+    back.type = "button"; back.className = "btn back-nav";
+    back.textContent = name + "に戻る";
+    back.setAttribute("aria-label", "ひとつ前の画面、" + name + "に戻る");
+    back.onclick = () => go(target);
+    app.prepend(back);
+  }
   updateBadge();
   window.scrollTo(0,0);
 }
@@ -514,10 +540,6 @@ function renderLessons(){
 }
 ROUTES.glossary = function(){
   app.innerHTML = pageHead("略語ずかん", "略語・正式名称・日本語の意味から検索できます。");
-  const back = document.createElement("button");
-  back.type = "button"; back.className = "btn"; back.textContent = "レッスン一覧に戻る";
-  back.onclick = () => go("#lessons");
-  app.appendChild(back);
   renderGlossary();
 };
 function renderGlossary(){
