@@ -327,7 +327,7 @@ function quiz(q, opts, ans, onAnswer, expHTML, previousChoice){
    画面
    ========================================================= */
 let tick = null;
-let screenTrail = [], activeRoute = "#home";
+let screenTrail = [], activeRoute = "#home", screenScroll = new Map();
 function trackScreen(route){
   if(route === activeRoute) return;
   const earlier = screenTrail.lastIndexOf(route);
@@ -358,21 +358,27 @@ function render(){
   const requestedHash = location.hash;
   fn();
   if(location.hash !== requestedHash) return;
-  trackScreen("#" + v);
+  const route = "#" + v;
+  const restoreY = screenTrail.includes(route) ? screenScroll.get(route) : undefined;
+  trackScreen(route);
   if(v !== "home"){
     const target = previousScreen(), name = screenName(target);
     const back = document.createElement("button");
     back.type = "button"; back.className = "btn back-nav";
-    back.textContent = name + "に戻る";
+    back.textContent = "← " + name + "に戻る";
     back.setAttribute("aria-label", "ひとつ前の画面、" + name + "に戻る");
     back.onclick = () => go(target);
     app.prepend(back);
   }
   updateBadge();
-  window.scrollTo(0,0);
+  window.scrollTo(0, restoreY === undefined ? 0 : restoreY);
 }
-const go = h => { if(location.hash === h) render(); else location.hash = h; };
-window.addEventListener("hashchange", render);
+const rememberScroll = () => screenScroll.set(activeRoute, window.scrollY);
+const go = h => {
+  if(location.hash === h) render();
+  else { rememberScroll(); location.hash = h; }
+};
+window.addEventListener("hashchange", () => { rememberScroll(); render(); });
 document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => go("#" + b.dataset.tab));
 
 /* ---------- ホーム ---------- */
