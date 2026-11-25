@@ -10,9 +10,40 @@ const STORE = "fe-kamokuA-public-v1";
 
 /* ---------- 保存 ---------- */
 const blank = () => ({terms:{}, xp:0, cards:{}, review:{}, days:{}, badges:{}, best:{game:0, test:0}, drillOk:0, reviewOk:0, maxCombo:0, timer:{start:null}, minutes:{}});
+/* 記録はスマホ（ブラウザ）の中に保存する。localStorage と IndexedDB の2か所に書いて、片方が消えても戻せるようにする */
 let S;
+const IDB = {
+  db: null,
+  open(){ return new Promise(res => { try { const r = indexedDB.open("kamokuA", 1); r.onupgradeneeded = () => r.result.createObjectStore("kv"); r.onsuccess = () => { this.db = r.result; res(this.db); }; r.onerror = () => res(null); } catch(e){ res(null); } }); },
+  async get(){ const db = this.db || await this.open(); if(!db) return null; return new Promise(res => { try { const q = db.transaction("kv").objectStore("kv").get(STORE); q.onsuccess = () => res(q.result || null); q.onerror = () => res(null); } catch(e){ res(null); } }); },
+  async set(v){ const db = this.db || await this.open(); if(!db) return; try { db.transaction("kv","readwrite").objectStore("kv").put(v, STORE); } catch(e){} }
+};
+let lastSaved = null;
 try { S = Object.assign(blank(), JSON.parse(localStorage.getItem(STORE) || "{}")); } catch(e){ S = blank(); }
-function save(){ try { localStorage.setItem(STORE, JSON.stringify(S)); } catch(e){} }
+function save(){
+  S.savedAt = Date.now();
+  const txt = JSON.stringify(S);
+  try { localStorage.setItem(STORE, txt); } catch(e){}
+  IDB.set(txt);
+  lastSaved = new Date();
+}
+/* 起動時：localStorage が空で IndexedDB に記録が残っていれば戻す（新しいほうを使う） */
+async function restoreFromIDB(){
+  const txt = await IDB.get();
+  if(!txt) return false;
+  try {
+    const d = JSON.parse(txt);
+    if((d.savedAt || 0) > (S.savedAt || 0)){ S = Object.assign(blank(), d); try { localStorage.setItem(STORE, txt); } catch(e){} return true; }
+  } catch(e){}
+  return false;
+}
+/* ブラウザに「この記録を勝手に消さないで」と頼む（対応している端末のみ） */
+async function askPersist(){
+  try { if(navigator.storage && navigator.storage.persist) return await navigator.storage.persist(); } catch(e){}
+  return false;
+}
+document.addEventListener("visibilitychange", () => { if(document.visibilityState === "hidden") save(); });
+window.addEventListener("pagehide", save);
 
 /* ---------- 小道具 ---------- */
 const $ = s => document.querySelector(s);
@@ -361,11 +392,34 @@ function renderHome(){
     <div class="badges">${BADGES.map(b=>`<div class="badge ${S.badges[b.id]?"on":""}" style="--m:${b.m}"><span class="b">${b.mark}</span>${b.name}</div>`).join("")}</div>
   </section>
 
-  <p class="small muted" style="text-align:center">記録はこの端末のブラウザに保存されます。<button type="button" class="linkbtn" id="resetBtn">記録をすべて消す</button></p>`;
+  <section class="panel" aria-label="記録の保存">
+    <div class="row between"><h2>記録の保存</h2><span class="pill good" id="saveState">このスマホに保存中</span></div>
+    <p class="small">答えた問題・レベル・用語のチェックなどは、自動でこのスマホの中に保存されます。アカウント登録はいりません。</p>
+    <ul class="small muted" style="margin:0;padding-left:1.2em">
+      <li>ホーム画面に追加して使うと、記録が消えにくくなります</li>
+      <li>機種変更やブラウザのデータ削除の前は、下のバックアップを取っておいてください</li>
+    </ul>
+    <div class="bkbtns">
+      <button type="button" class="btn" id="bkSave">バックアップを保存</button>
+      <button type="button" class="btn" id="bkLoad">バックアップから戻す</button>
+    </div>
+    <details class="small"><summary style="cursor:pointer;font-weight:700;color:var(--accent)">ファイルが使えないとき（コピーで移す）</summary>
+      <div style="display:grid;gap:8px;margin-top:8px">
+        <button type="button" class="btn" id="bkCopy">記録をコードでコピー</button>
+        <textarea id="bkCode" class="search" rows="3" placeholder="別のスマホでコピーしたコードをここに貼り付け" aria-label="記録のコード"></textarea>
+        <button type="button" class="btn" id="bkPaste">貼り付けたコードで戻す</button>
+      </div>
+    </details>
+    <input type="file" id="bkFile" accept="application/json,.json,.txt" hidden>
+    <p class="small muted" id="bkMsg" aria-live="polite"></p>
+  </section>
+
+  <p class="small muted" style="text-align:center"><button type="button" class="linkbtn" id="resetBtn">記録をすべて消す</button></p>`;
 
   $("#nextBtn").onclick = () => go(ns.go);
   app.querySelectorAll("[data-go]").forEach(b => b.onclick = () => { LP = null; go(b.dataset.go); });
   $("#timerBtn").onclick = toggleTimer;
+  setupBackup();
   const resetBtn = $("#resetBtn");
   resetBtn.onclick = () => {
     if(resetBtn.dataset.sure){ S = blank(); save(); render(); }
@@ -868,6 +922,56 @@ function renderTest(){
   p.appendChild(next);
 }
 
+/* ---------- バックアップ ---------- */
+function encodeRecord(){ return "KA1:" + btoa(unescape(encodeURIComponent(JSON.stringify(S)))); }
+function decodeRecord(t){
+  t = String(t).trim();
+  if(t.startsWith("KA1:")) t = decodeURIComponent(escape(atob(t.slice(4))));
+  const d = JSON.parse(t);
+  if(typeof d !== "object" || d === null || !("xp" in d)) throw new Error("bad");
+  return d;
+}
+function applyRecord(d, msg){
+  S = Object.assign(blank(), d); save();
+  toast("記録を戻しました");
+  render();
+}
+function setupBackup(){
+  const msg = t => { const m = $("#bkMsg"); if(m) m.textContent = t; };
+  const st = $("#saveState");
+  askPersist().then(ok => { if(st && ok) st.textContent = "このスマホに保存中（消えにくい設定）"; });
+  $("#bkSave").onclick = () => {
+    save();
+    const d = new Date(), name = `kamokuA-backup-${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}.json`;
+    const blob = new Blob([JSON.stringify(S)], {type:"application/json"});
+    const file = new File([blob], name, {type:"application/json"});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      navigator.share({files:[file], title:"科目Aの記録"}).then(() => msg("共有メニューから保存しました。「ファイルに保存」などを選ぶとスマホに残ります。")).catch(() => {});
+      return;
+    }
+    const url = URL.createObjectURL(blob), link = document.createElement("a");
+    link.href = url; link.download = name; document.body.appendChild(link); link.click(); link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    msg(`「${name}」をダウンロードしました。`);
+  };
+  $("#bkLoad").onclick = () => $("#bkFile").click();
+  $("#bkFile").onchange = e => {
+    const f = e.target.files[0]; if(!f) return;
+    f.text().then(t => { try { applyRecord(decodeRecord(t)); } catch(err){ msg("このファイルは読み込めませんでした。保存したバックアップのファイルを選んでください。"); } });
+  };
+  $("#bkCopy").onclick = () => {
+    save();
+    const code = encodeRecord();
+    const done = () => msg("コードをコピーしました。別のスマホで貼り付けて「貼り付けたコードで戻す」を押してください。");
+    if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(code).then(done).catch(() => { $("#bkCode").value = code; $("#bkCode").select(); msg("下の欄のコードを長押ししてコピーしてください。"); }); }
+    else { $("#bkCode").value = code; $("#bkCode").select(); msg("下の欄のコードを長押ししてコピーしてください。"); }
+  };
+  $("#bkPaste").onclick = () => {
+    try { applyRecord(decodeRecord($("#bkCode").value)); } catch(err){ msg("コードが正しくありません。コピーしたコードを全部貼り付けてください。"); }
+  };
+}
+
 /* ---------- 起動 ---------- */
 render();
 checkBadges();
+restoreFromIDB().then(changed => { if(changed) render(); else save(); });
