@@ -586,6 +586,26 @@ section.guide h2{scroll-margin-top:12px}
 .motion-timeline{display:flex;width:100%;gap:0;min-height:48px;background:var(--accent-soft);border:1px solid var(--line);border-radius:8px;overflow:hidden}
 .motion-timeline span{background:var(--accent);color:white;text-align:center;font-size:13px;line-height:1.6;padding:4px 0;border-right:2px solid var(--card)}
 .motion-timeline span:nth-child(2){background:var(--calc)}
+
+/* ---- 見やすさの修正 ---- */
+.cardslink{color:var(--ink)}
+.tabs button{white-space:nowrap;letter-spacing:-.02em}
+:root[data-theme="dark"] .btn.primary{background:color-mix(in srgb,var(--sec,var(--accent)) 62%,#000)}
+:root[data-theme="dark"] .chipbtn[aria-pressed="true"]{background:color-mix(in srgb,var(--calc) 62%,#000);border-color:color-mix(in srgb,var(--calc) 62%,#000)}
+:root[data-theme="dark"] .catbtn[aria-pressed="true"]{color:var(--paper)}
+:root[data-theme="dark"] .gtag,:root[data-theme="dark"] .guide-group .num{background:color-mix(in srgb,var(--accent) 62%,#000)}
+:root[data-theme="dark"] .newb{background:color-mix(in srgb,var(--bad) 70%,#000)}
+:root[data-theme="dark"] .btn.calc{background:color-mix(in srgb,var(--calc) 60%,#000);color:#fff}
+:root[data-theme="dark"] .stage-tg{color:color-mix(in srgb,var(--c) 55%,#fff)}
+@media (prefers-color-scheme: dark){
+:root:not([data-theme="light"]) .btn.primary{background:color-mix(in srgb,var(--sec,var(--accent)) 62%,#000)}
+:root:not([data-theme="light"]) .chipbtn[aria-pressed="true"]{background:color-mix(in srgb,var(--calc) 62%,#000);border-color:color-mix(in srgb,var(--calc) 62%,#000)}
+:root:not([data-theme="light"]) .catbtn[aria-pressed="true"]{color:var(--paper)}
+:root:not([data-theme="light"]) .gtag,:root:not([data-theme="light"]) .guide-group .num{background:color-mix(in srgb,var(--accent) 62%,#000)}
+:root:not([data-theme="light"]) .newb{background:color-mix(in srgb,var(--bad) 70%,#000)}
+:root:not([data-theme="light"]) .btn.calc{background:color-mix(in srgb,var(--calc) 60%,#000);color:#fff}
+:root:not([data-theme="light"]) .stage-tg{color:color-mix(in srgb,var(--c) 55%,#fff)}
+}
 </style>
 </head>
 <body>
@@ -601,23 +621,24 @@ section.guide h2{scroll-margin-top:12px}
   </div>
 </nav>
 
-<script src="data.js?v=42"></script>
-<script src="visuals.js?v=42"></script>
-<script src="glossary.js?v=42"></script>
-<script src="terms.js?v=42"></script>
-<script src="terms2.js?v=42"></script>
-<script src="terms3.js?v=42"></script>
-<script src="dbterms.js?v=42"></script>
-<script src="usage.js?v=42"></script>
-<script src="lessons2.js?v=42"></script>
-<script src="motion.js?v=42"></script>
-<script src="guide.js?v=42"></script>
-<script src="questions.js?v=42"></script>
-<script src="app.js?v=42"></script>
-<script src="extras.js?v=42"></script>
-<script src="learn.js?v=42"></script>
-<script src="layout.js?v=42"></script>
-<script src="reference.js?v=42"></script>
+<script src="data.js?v=43"></script>
+<script src="visuals.js?v=43"></script>
+<script src="glossary.js?v=43"></script>
+<script src="terms.js?v=43"></script>
+<script src="terms2.js?v=43"></script>
+<script src="terms3.js?v=43"></script>
+<script src="dbterms.js?v=43"></script>
+<script src="usage.js?v=43"></script>
+<script src="lessons2.js?v=43"></script>
+<script src="motion.js?v=43"></script>
+<script src="guide.js?v=43"></script>
+<script src="questions.js?v=43"></script>
+<script src="balance.js?v=43"></script>
+<script src="app.js?v=43"></script>
+<script src="extras.js?v=43"></script>
+<script src="learn.js?v=43"></script>
+<script src="layout.js?v=43"></script>
+<script src="reference.js?v=43"></script>
 <script>if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});</script>
 </body>
 </html>

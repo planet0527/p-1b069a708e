@@ -349,7 +349,7 @@ function renderTerms(){
   head.innerHTML = `
     <div class="row"><div class="bar good"><i style="width:${done/total*100}%;background:var(--good)"></i></div><span class="small muted num">覚えた ${done} / ${total}</span></div>
     <div class="legend small"><span><b class="stars">★★★</b> 過去問でくり返し出る定番　<b class="stars">★★</b> ときどき出る　<b class="stars">★</b> 知っておくと点になる</span><span><b class="newb">NEW</b> 2024年10月からの出題範囲改訂で増えたAI・データ・セキュリティなどの用語（${nw}語）</span></div>
-    <input id="tq" class="search" type="search" placeholder="用語・意味・使う場面で探す（例：予約、ログイン）" value="${esc(TM.q)}" autocomplete="off" aria-label="用語を探す">
+    <input id="tq" class="search" type="search" placeholder="例：署名、ログイン、予約" value="${esc(TM.q)}" autocomplete="off" aria-label="用語を探す">
     <div class="chips" id="tmode"></div>
     <div class="catscroll" id="tcat"></div>
     <button type="button" class="toggle-hide" id="thide" aria-pressed="${TM.hide}">${TM.hide ? "かくして覚えるモード：オン" : "かくして覚えるモード：オフ"}</button>`;
