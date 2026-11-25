@@ -12,7 +12,7 @@
   dialog.id = "learning-reference";
   dialog.className = "reference-dialog";
   dialog.setAttribute("aria-labelledby", "reference-title");
-  dialog.innerHTML = `<div class="reference-head"><h2 id="reference-title">いつでも学習メモ</h2><button type="button" class="btn" data-ref-close>閉じて学習に戻る</button></div>
+  dialog.innerHTML = `<div class="reference-head"><h2 id="reference-title">いつでも学習メモ</h2><button type="button" class="btn" data-ref-close aria-label="閉じて学習に戻る">学習に戻る</button></div>
     <p class="small muted">問題を開いたまま確認できます。制限時間のある練習では、タイマーは進みます。</p>
     <label class="guide-search">知りたいことを探す<input type="search" data-ref-search placeholder="例：キャッシュ、SQL、誰の鍵"></label>
     <div class="row between"><p class="small muted" data-ref-count role="status"></p><button type="button" class="btn" data-ref-list hidden>項目一覧へ</button></div>
