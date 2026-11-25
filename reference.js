@@ -15,7 +15,7 @@
   dialog.innerHTML = `<div class="reference-head"><h2 id="reference-title">いつでも学習メモ</h2><button type="button" class="btn" data-ref-close aria-label="閉じて学習に戻る">学習に戻る</button></div>
     <p class="small muted">問題を開いたまま確認できます。制限時間のある練習では、タイマーは進みます。</p>
     <label class="guide-search">知りたいことを探す<input type="search" data-ref-search placeholder="例：キャッシュ、SQL、誰の鍵"></label>
-    <div class="reference-tools" aria-label="学習メモの絞り込み"><button type="button" class="btn" data-ref-all aria-pressed="true">すべて</button><button type="button" class="btn" data-ref-saved aria-pressed="false">保存した項目</button><button type="button" class="btn" data-ref-recent aria-pressed="false">最近見た</button></div><div class="reference-filter-row"><label>分野<select data-ref-category><option value="">全分野</option><option value="numbers">計算・数字</option><option value="terms">用語・仕組み</option><option value="algorithm">アルゴリズム</option><option value="study">学び方・試験</option></select></label><button type="button" class="btn" data-ref-clear hidden>絞り込み解除</button></div>
+    <div class="reference-tools" aria-label="学習メモの絞り込み"><button type="button" class="btn" data-ref-all aria-pressed="true">すべて</button><button type="button" class="btn" data-ref-saved aria-pressed="false">保存した項目</button><button type="button" class="btn" data-ref-recent aria-pressed="false">最近見た</button></div><div class="reference-filter-row"><label>表示範囲<select data-ref-category><option value="">全分野</option><option value="numbers">計算・数字</option><option value="terms">用語・仕組み</option><option value="algorithm">アルゴリズム</option><option value="study">学び方・試験</option><option value="notes">自分のメモあり</option></select></label><button type="button" class="btn" data-ref-clear hidden>絞り込み解除</button></div>
     <div class="row between"><p class="small muted" data-ref-count role="status"></p><button type="button" class="btn" data-ref-list hidden>項目一覧へ</button></div>
     <div class="reference-list"></div><div class="reference-content"></div>`;
   document.body.appendChild(dialog);
@@ -39,6 +39,14 @@
     return "study";
   };
   let loaded = false, entries = [], active = null, previousFocus = null, previousOverflow = "";
+  const readNote = title => typeof S.ui?.referenceNotes?.[title] === "string" ? S.ui.referenceNotes[title].slice(0,2000) : "";
+  const hasNote = title => readNote(title).trim().length > 0;
+  function refreshNote(entry){
+    const text = readNote(entry.title);
+    entry.noteSummary.textContent = text.trim() ? "自分のメモを読む・編集する" : "自分のメモを書く";
+    entry.noteStatus.textContent = text.length + " / 2000字（入力すると自動で記録）";
+    entry.button.title = text.trim() ? "自分のメモがあります" : "";
+  }
   const pinned = title => Array.isArray(S.ui?.referencePins) && S.ui.referencePins.includes(title);
   function updatePins(){
     const total = entries.filter(entry => pinned(entry.title)).length;
@@ -63,7 +71,7 @@
     let matches = 0;
     const recent = history();
     entries.forEach((entry, i) => {
-      const visible = (mode !== "saved" || pinned(entry.title)) && (mode !== "recent" || recent.includes(entry.title)) && (!category.value || entry.group === category.value) && words.every(word => entry.text.includes(word));
+      const visible = (mode !== "saved" || pinned(entry.title)) && (mode !== "recent" || recent.includes(entry.title)) && (!category.value || (category.value === "notes" ? hasNote(entry.title) : entry.group === category.value)) && words.every(word => (entry.text + " " + readNote(entry.title).normalize("NFKC").toLowerCase()).includes(word));
       
       entry.row.hidden = !visible;
       if(visible) matches++;
@@ -92,6 +100,34 @@
       const pin = document.createElement("button");
       pin.type = "button"; pin.className = "btn reference-pin";
       const entry = {section, button, row, pin, title:title.textContent, group:group(section), text:section.textContent.normalize("NFKC").toLowerCase()};
+      const noteBox = document.createElement("details");
+      noteBox.className = "reference-own-note";
+      const noteSummary = document.createElement("summary");
+      const noteLabel = document.createElement("label");
+      noteLabel.textContent = "この項目の自分のメモ";
+      const noteInput = document.createElement("textarea");
+      noteInput.rows = 4; noteInput.maxLength = 2000;
+      noteInput.placeholder = "例：間違えた理由、自分で考えた覚え方、次に確認すること";
+      noteInput.value = readNote(entry.title);
+      noteLabel.appendChild(noteInput);
+      const noteStatus = document.createElement("p");
+      noteStatus.className = "small muted";
+      noteStatus.setAttribute("role", "status");
+      noteBox.appendChild(noteSummary);
+      noteBox.appendChild(noteLabel);
+      noteBox.appendChild(noteStatus);
+      section.insertBefore(noteBox, section.children[1] || null);
+      Object.assign(entry, {noteSummary, noteStatus, noteInput});
+      refreshNote(entry);
+      noteInput.oninput = () => {
+        S.ui ||= {};
+        if(!S.ui.referenceNotes || typeof S.ui.referenceNotes !== "object" || Array.isArray(S.ui.referenceNotes)) S.ui.referenceNotes = {};
+        const text = noteInput.value.slice(0,2000);
+        if(text) S.ui.referenceNotes[entry.title] = text;
+        else delete S.ui.referenceNotes[entry.title];
+        save();
+        refreshNote(entry);
+      };
       pin.onclick = () => {
         S.ui ||= {};
         const pins = new Set(Array.isArray(S.ui.referencePins) ? S.ui.referencePins.filter(x => typeof x === "string") : []);
@@ -104,6 +140,8 @@
       button.onclick = () => {
         listScroll = list.scrollTop;
         active = entry;
+        noteInput.value = readNote(entry.title);
+        refreshNote(entry);
         S.ui ||= {};
         S.ui.referenceRecent = [entry.title, ...history().filter(name => name !== entry.title)].slice(0,6);
         save();
