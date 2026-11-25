@@ -10,8 +10,51 @@ const STORE = "fe-kamokuA-public-v1";
 
 /* ---------- 保存 ---------- */
 const blank = () => ({terms:{}, xp:0, cards:{}, review:{}, days:{}, badges:{}, best:{game:0, test:0}, drillOk:0, reviewOk:0, maxCombo:0, timer:{start:null}, minutes:{}});
+function normalizeRecord(raw, requireXP=false){
+  const map = x => x !== null && typeof x === "object" && !Array.isArray(x);
+  const number = x => typeof x === "number" && Number.isFinite(x) && x >= 0;
+  if(!map(raw) || (requireXP && !Object.hasOwn(raw,"xp"))) throw new Error("bad record");
+  const out = {...blank(), ...raw};
+  for(const key of ["terms","cards","review","days","badges","best","timer","minutes","log","bm","daily","ui","practice"]){
+    if(out[key] !== undefined && !map(out[key])) throw new Error("bad " + key);
+  }
+  for(const key of ["xp","drillOk","reviewOk","maxCombo","savedAt"]){
+    if(out[key] !== undefined && !number(out[key])) throw new Error("bad " + key);
+  }
+  out.best = {game:0, test:0, ...out.best};
+  if(!number(out.best.game) || !number(out.best.test)) throw new Error("bad best");
+  out.timer = {start:null, ...out.timer};
+  if(out.timer.start !== null && !number(out.timer.start)) throw new Error("bad timer");
+  for(const card of Object.values(out.cards)){
+    if(!map(card) || ["seen","ok","read"].some(k => card[k] !== undefined && typeof card[k] !== "boolean")) throw new Error("bad card");
+  }
+  const validCardKey = k => /^\d+$/.test(k) && Number(k) < CARDS.length;
+  if(!Object.keys(out.cards).every(validCardKey) || !Object.keys(out.review).every(validCardKey)) throw new Error("bad card id");
+  for(const review of Object.values(out.review)){
+    if(!map(review) || ![1,2,3].includes(review.lv) || typeof review.due !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(review.due) || !Number.isFinite(Date.parse(review.due))) throw new Error("bad review");
+  }
+  for(const day of Object.values(out.days)){
+    if(!map(day) || ["lesson","drill","game","review","practice"].some(k => day[k] !== undefined && !number(day[k]))) throw new Error("bad day");
+  }
+  if(Object.values(out.minutes).some(x => !number(x))) throw new Error("bad minutes");
+  if(out.log && Object.values(out.log).some(x => !map(x) || !number(x.n) || !number(x.ok) || ![0,1].includes(x.last))) throw new Error("bad log");
+  if(out.practice){
+    out.practice = {done:0, ok:0, best:{}, ...out.practice};
+    if(!number(out.practice.done) || !number(out.practice.ok) || !map(out.practice.best)) throw new Error("bad practice");
+  }
+  const validQuestion = q => map(q) && typeof q.q === "string" && Array.isArray(q.opts) && q.opts.length >= 2 && q.opts.length <= 4 && q.opts.every(x => typeof x === "string") && Number.isInteger(q.a) && q.a >= 0 && q.a < q.opts.length && SECTIONS.some(s => s.id === q.sec);
+  for(const key of ["mockCur","mockLast"]){
+    const m = out[key]; if(m === undefined || m === null) continue;
+    if(!map(m) || !Array.isArray(m.list) || !m.list.length || m.list.length > 60 || !m.list.every(validQuestion) || !Array.isArray(m.ans) || m.ans.length !== m.list.length || !m.ans.every((a,i) => a === null || (Number.isInteger(a) && a >= 0 && a < m.list[i].opts.length))) throw new Error("bad mock");
+    if(key === "mockCur" && (!Array.isArray(m.flag) || m.flag.length !== m.list.length || !m.flag.every(x => typeof x === "boolean") || !Number.isInteger(m.i) || m.i < 0 || m.i >= m.list.length || !number(m.used))) throw new Error("bad mock progress");
+    if(key === "mockLast" && (!map(m.byF) || !map(m.bySec) || !number(m.score) || !number(m.right) || !number(m.total) || !number(m.min))) throw new Error("bad mock result");
+  }
+  if(out.mocks !== undefined && (!Array.isArray(out.mocks) || !out.mocks.every(m => map(m) && number(m.score) && number(m.min) && typeof m.date === "string"))) throw new Error("bad mock history");
+  return out;
+}
 /* 記録はスマホ（ブラウザ）の中に保存する。localStorage と IndexedDB の2か所に書いて、片方が消えても戻せるようにする */
 let S;
+let storageReady = false;
 const IDB = {
   db: null,
   open(){ return new Promise(res => { try { const r = indexedDB.open("kamokuA", 1); r.onupgradeneeded = () => r.result.createObjectStore("kv"); r.onsuccess = () => { this.db = r.result; res(this.db); }; r.onerror = () => res(null); } catch(e){ res(null); } }); },
@@ -19,8 +62,9 @@ const IDB = {
   async set(v){ const db = this.db || await this.open(); if(!db) return; try { db.transaction("kv","readwrite").objectStore("kv").put(v, STORE); } catch(e){} }
 };
 let lastSaved = null;
-try { S = Object.assign(blank(), JSON.parse(localStorage.getItem(STORE) || "{}")); } catch(e){ S = blank(); }
+try { S = normalizeRecord(JSON.parse(localStorage.getItem(STORE) || "{}")); } catch(e){ S = blank(); }
 function save(){
+  if(!storageReady) return;
   S.savedAt = Date.now();
   const txt = JSON.stringify(S);
   try { localStorage.setItem(STORE, txt); } catch(e){}
@@ -32,8 +76,8 @@ async function restoreFromIDB(){
   const txt = await IDB.get();
   if(!txt) return false;
   try {
-    const d = JSON.parse(txt);
-    if((d.savedAt || 0) > (S.savedAt || 0)){ S = Object.assign(blank(), d); try { localStorage.setItem(STORE, txt); } catch(e){} return true; }
+    const d = normalizeRecord(JSON.parse(txt), true);
+    if((d.savedAt || 0) > (S.savedAt || 0)){ S = d; try { localStorage.setItem(STORE, JSON.stringify(S)); } catch(e){} return true; }
   } catch(e){}
   return false;
 }
@@ -287,6 +331,7 @@ function clearTick(){ if(tick){ clearInterval(tick); tick = null; } }
 
 const ROUTES = {home:renderHome, lessons:renderLessons, drill:renderDrill, game:renderGame, review:renderReview, test:renderTest, terms:renderTerms, guide:renderGuide, practice:renderPractice};
 function render(){
+  if(!storageReady){ app.innerHTML = '<section class="panel" role="status">学習記録を読み込んでいます…</section>'; return; }
   clearTick();
   let v = (location.hash || "#home").slice(1);
   let fn = ROUTES[v];
@@ -507,10 +552,9 @@ function restoreLessonSession(raw){
   return {sec:raw.sec, list, i:raw.i, phase, res, xp:Math.max(0, Number(raw.xp) || 0), ok:res[raw.i] === true};
 }
 let LP = restoreLessonSession(S.lessonSession);
-let lessonStorageReady = false;
 function checkpointLesson(){
   S.lessonSession = LP && LP.i < LP.list.length ? {...LP, list:LP.list.slice(), res:Array.from(LP.res, x => typeof x === "boolean" ? x : null)} : null;
-  if(lessonStorageReady) save();
+  save();
 }
 function renderLesson(id){
   const sec = secOf(id);
@@ -969,12 +1013,11 @@ function encodeRecord(){ return "KA1:" + btoa(unescape(encodeURIComponent(JSON.s
 function decodeRecord(t){
   t = String(t).trim();
   if(t.startsWith("KA1:")) t = decodeURIComponent(escape(atob(t.slice(4))));
-  const d = JSON.parse(t);
-  if(typeof d !== "object" || d === null || !("xp" in d)) throw new Error("bad");
-  return d;
+  return normalizeRecord(JSON.parse(t), true);
 }
 function applyRecord(d, msg){
-  S = Object.assign(blank(), d); save();
+  const next = normalizeRecord(d, true);
+  S = next; save();
   LP = restoreLessonSession(S.lessonSession);
   toast("記録を戻しました");
   render();
@@ -1016,10 +1059,10 @@ function setupBackup(){
 
 /* ---------- 起動 ---------- */
 render();
-checkBadges();
-restoreFromIDB().then(changed => {
-  if(changed) LP = restoreLessonSession(S.lessonSession);
-  lessonStorageReady = true;
-  if(changed) render(); else save();
+restoreFromIDB().then(() => {
+  LP = restoreLessonSession(S.lessonSession);
+  storageReady = true;
+  checkBadges();
+  save(); render();
 });
 
