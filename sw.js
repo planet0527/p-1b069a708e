@@ -1,7 +1,7 @@
 /* このアプリのファイルだけを保存し、ほかのアプリのキャッシュを保護する。 */
 const PREFIX = "kamokuA-p-1b069a708e-";
-const CACHE = PREFIX + "v48";
-const FILES = ["./","index.html","data.js?v=48","visuals.js?v=48","glossary.js?v=48","terms.js?v=48","terms2.js?v=48","terms3.js?v=48","dbterms.js?v=48","usage.js?v=48","lessons2.js?v=48","guide.js?v=48","questions.js?v=48","balance.js?v=48","app.js?v=48","extras.js?v=48","learn.js?v=48","layout.js?v=48","reference.js?v=48","motion.js?v=48","motion2.js?v=48","motion3.js?v=48","motion4.js?v=48","motion5.js?v=48","motion6.js?v=48","manifest.webmanifest","icon-192.png","icon-512.png","icon-180.png"];
+const CACHE = PREFIX + "v49";
+const FILES = ["./","index.html","data.js?v=49","visuals.js?v=49","glossary.js?v=49","terms.js?v=49","terms2.js?v=49","terms3.js?v=49","dbterms.js?v=49","usage.js?v=49","lessons2.js?v=49","guide.js?v=49","questions.js?v=49","balance.js?v=49","app.js?v=49","extras.js?v=49","learn.js?v=49","layout.js?v=49","reference.js?v=49","motion.js?v=49","motion2.js?v=49","motion3.js?v=49","motion4.js?v=49","motion5.js?v=49","motion6.js?v=49","manifest.webmanifest","icon-192.png","icon-512.png","icon-180.png"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
 });

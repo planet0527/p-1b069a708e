@@ -17,7 +17,7 @@ function addressSteps(value){
 function sampleValues(rate,bits){
  const levels=2**bits;
  return Array.from({length:rate},(_,i)=>{
-  const t=i/rate,value=(Math.sin(4*Math.PI*t)+1)/2,code=Math.round(value*(levels-1));
+  const t=i/rate,value=(Math.sin(4*Math.PI*t)+1)/2,code=Math.round(value*(levels-1)+1e-12);
   return {t,value,code,quantized:code/(levels-1)};
  });
 }
@@ -39,3 +39,4 @@ X.digitalSound=box=>slider(box,{sliders:[
 window.motion5HTML=()=>`<p>見えない変換を、途中の数値と図で確かめます。</p><details class="usage"><summary>仮想記憶：ページ番号・オフセット・ページフォールト</summary><div class="usage-body" data-motion2="virtualAddress"></div></details><details class="usage"><summary>音のデジタル化：標本化と量子化を別々に変える</summary><div class="usage-body" data-motion2="digitalSound"></div></details>`;
 Object.assign(window.MOTION_MAP||{},{"仮想記憶":"virtualAddress","標本化・量子化・符号化":"digitalSound"});
 })();
+
