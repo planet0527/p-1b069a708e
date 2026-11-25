@@ -137,6 +137,37 @@ function renderGuide(){
     </div></details>
     <button type="button" class="btn wide" data-go="#lessons">基礎理論・アルゴリズムを学ぶ</button>`) +
 
+
+  sec("暗号化・ハッシュ・エンコードは、目的で分ける", "データの保護", `
+    <p>見た目が読めない文字列になっていても、同じ仕組みとは限りません。「元に戻す必要があるか」「秘密を守りたいか」を考えます。</p>
+    <details class="usage"><summary>3つの違いを、同じデータで比べる</summary><div class="usage-body">
+      <div class="gcards">
+        <div><b>暗号化：許可された相手が元の内容を読めるように守る</b><span>例：住所を暗号文にして保管し、配送処理のときに適切な鍵で復号する。鍵の管理が必要です。「暗号化したから誰でも安全に配れる」とは限りません。</span></div>
+        <div><b>ハッシュ：元の内容から、照合に使う値を計算する</b><span>例：配布ファイルのハッシュ値を計算し、信頼できる場所で公開された値と比べる。値が違えば内容は同じではありません。ハッシュ値から元のファイルへ復号する操作はありません。</span></div>
+        <div><b>エンコード：やり取りできる表現へ変える</b><span>例：ABCをBase64にするとQUJD。決まったルールでABCへ戻せますが、秘密鍵は不要なので、これだけでは内容を隠せません。文字化けや送受信の都合に対応する表現変換です。</span></div>
+      </div>
+      <p><b>ハッシュの注意点</b>同じ方式では出力の長さが決まるため、異なる入力が同じ値になる「衝突」はあり得ます。ハッシュ値が一致することを、数学的に絶対同一という意味で扱いません。また、ファイルと確認用の値が両方すり替わると見抜けないので、比較する値の入手元も大切です。</p>
+      <p><b>パスワード保存は、単に一度ハッシュすればよい？</b>いいえ。専用のパスワードハッシュ方式とソルトを使います。ソルトは利用者ごとなどに付けるランダムな値で、同じパスワードの計算結果をそのまま使い回しにくくします。短い候補の総当たりまで不可能にするわけではありません。</p>
+      <p class="small muted">参考：<a href="https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html" target="_blank" rel="noopener noreferrer">OWASP：パスワード保存</a></p>
+    </div></details>
+    <details class="usage"><summary>確認：Base64にしたパスワードなら、安全に公開できる？</summary><div class="usage-body"><p><b>答え：できません</b>Base64は表現の変換で、ルールを知っていれば元へ戻せます。「読めない見た目」と「秘密として保護されていること」を分けて考えましょう。</p></div></details>
+    <button type="button" class="btn wide" data-go="#terms">関連する用語を調べる</button>`) +
+
+  sec("認証・認可・署名は、確かめる対象が違う", "セキュリティの役割", `
+    <p>「確認する仕組み」とだけ覚えると混ざりやすくなります。何を確かめたいのかまでセットで覚えましょう。</p>
+    <details class="usage"><summary>学校の成績システムで、役割を比べる</summary><div class="usage-body">
+      <div class="ftable">
+        <div><b>認証：誰なのか</b><span>ログインした人が、登録された学生本人かを確認する。多要素認証は、知っているもの・持っているもの・身体の特徴など、異なる種類の要素を組み合わせる考え方です。</span></div>
+        <div><b>認可：何をしてよいか</b><span>学生には自分の成績の閲覧を、担当教員には担当科目の成績入力を許可する。本人確認ができても、全員に同じ権限を与えるわけではありません。</span></div>
+        <div><b>デジタル署名：誰が署名し、変更されていないか</b><span>学校が発行する電子文書へ秘密鍵で署名し、受け取った人が対応する公開鍵で検証する。公開鍵が学校のものだと信頼できることも必要です。署名だけでは文書の中身は隠れません。</span></div>
+      </div>
+      <p><b>多要素と、手順が2回あることは同じ？</b>同じではありません。パスワードと秘密の質問は、どちらも「知っているもの」。入力が2回でも、それだけで異なる要素を使ったことにはなりません。</p>
+      <p class="small muted">参考：<a href="https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html" target="_blank" rel="noopener noreferrer">OWASP：認可</a> ／ <a href="https://csrc.nist.gov/glossary/term/digital_signature" target="_blank" rel="noopener noreferrer">NIST：デジタル署名</a></p>
+    </div></details>
+    <details class="usage"><summary>確認：ログインできた学生が、他人の成績も見られる。どの確認が足りない？</summary><div class="usage-body"><p><b>答え：認可・アクセス制御の確認</b>ログインで本人を確かめることと、そのデータを閲覧してよいか確かめることは別です。画面のボタンを隠すだけでなく、データを返す側でも権限を確認する必要があります。</p></div></details>
+    <details class="usage"><summary>確認：署名が正しく検証できれば、文書は暗号化されている？</summary><div class="usage-body"><p><b>答え：暗号化されているとは限りません</b>署名は署名者や内容の改変を確かめるためのもの。第三者に内容を読まれないようにするには、別に適切な暗号化などを組み合わせます。</p></div></details>
+    <button type="button" class="btn wide" data-go="#practice">役割の違いを問題演習で確かめる</button>`) +
+
   sec("まず試験の形を知る", "基本", `
     <div class="gstats">
       <div><b class="num">60</b><span>問</span><small>四肢択一</small></div>
