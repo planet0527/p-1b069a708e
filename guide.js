@@ -1,6 +1,7 @@
 /* 科目A攻略ガイド：知っておくと受験が楽になること */
-function renderGuide(){
-  app.innerHTML = pageHead("科目A攻略ガイド", "知識とは別に、知っているだけで点が取りやすくなるコツをまとめたよ。", "happy");
+function renderGuide(target = app){
+  const host = target;
+  host.innerHTML = pageHead("科目A攻略ガイド", "知識とは別に、知っているだけで点が取りやすくなるコツをまとめたよ。", "happy");
   const sec = (title, tag, body) => `<section class="panel guide"><div class="row" style="gap:8px"><span class="gtag">${tag}</span><h2>${title}</h2></div>${body}</section>`;
   const gl = glosser();
 
@@ -19,7 +20,7 @@ function renderGuide(){
     
   </svg></figure>`;
 
-  app.insertAdjacentHTML("beforeend",
+  host.insertAdjacentHTML("beforeend",
 
   sec("迷ったら、今の状態から選ぼう", "学び方", `
     <p>全部のメニューを毎回使う必要はありません。いま困っていることに合わせて、ひとつ選びましょう。</p>
@@ -323,25 +324,44 @@ ORDER BY o.order_id;</code></pre>
   );
 
 
-  const guideSections = [...app.querySelectorAll("section.guide")];
+  const guideSections = [...host.querySelectorAll("section.guide")];
   const guideMenu = guideSections.map((section, i) => {
     const heading = section.querySelector("h2");
     heading.tabIndex = -1;
     return `<button type="button" class="btn" data-guide-jump="${i}">${esc(heading.textContent)}</button>`;
   }).join("");
   guideSections[0]?.insertAdjacentHTML("beforebegin", `<nav class="panel guide-index" aria-label="攻略ガイドの目次"><h2>読みたい項目を選ぶ</h2><p class="small muted">目的の説明へ移動します。ページ上部の「項目一覧へ」で、ここへ戻れます。</p><details class="usage"><summary>目次を開く</summary><div class="usage-body guide-index-list">${guideMenu}</div></details></nav><button type="button" class="btn guide-index-back">↑ 項目一覧へ</button>`);
-  app.querySelectorAll("[data-guide-jump]").forEach(button => button.onclick = () => {
+  const guideIndex = host.querySelector(".guide-index");
+  guideIndex?.insertAdjacentHTML("afterbegin", '<label class="guide-search">説明を探す<input type="search" data-guide-search placeholder="例：単位、SQL、認証"></label><p class="small muted" data-guide-count role="status"></p>');
+  const guideSearch = host.querySelector("[data-guide-search]");
+  const guideCount = host.querySelector("[data-guide-count]");
+  if(guideSearch) guideSearch.oninput = () => {
+    const words = guideSearch.value.normalize("NFKC").toLowerCase().trim().split(/\s+/).filter(Boolean);
+    let count = 0;
+    guideSections.forEach((section, i) => {
+      const text = section.textContent.normalize("NFKC").toLowerCase();
+      const visible = words.every(word => text.includes(word));
+      section.hidden = !visible;
+      const button = host.querySelector(`[data-guide-jump="${i}"]`);
+      if(button) button.hidden = !visible;
+      if(visible) count++;
+    });
+    guideCount.textContent = words.length ? (count ? count + "件の説明が見つかりました" : "見つかりません。短い言葉で探すか、検索欄を空にしてください。") : "";
+    const details = guideIndex.querySelector("details");
+    if(words.length && details) details.open = true;
+  };
+  host.querySelectorAll("[data-guide-jump]").forEach(button => button.onclick = () => {
     const heading = guideSections[Number(button.dataset.guideJump)]?.querySelector("h2");
     heading?.focus({preventScroll:true});
     heading?.scrollIntoView({block:"start",behavior:"auto"});
   });
-  const indexBack = app.querySelector(".guide-index-back");
+  const indexBack = host.querySelector(".guide-index-back");
   if(indexBack) indexBack.onclick = () => {
-    const summary = app.querySelector(".guide-index summary");
+    const summary = host.querySelector(".guide-index summary");
     summary.focus({preventScroll:true});
     summary.scrollIntoView({block:"start",behavior:"auto"});
   };
 
-  app.querySelectorAll("[data-go]").forEach(b => b.onclick = () => go(b.dataset.go));
-  app.querySelectorAll("[data-ck]").forEach(c => c.onchange = () => { S.guideCk ||= {}; S.guideCk[c.dataset.ck] = c.checked; save(); if(c.checked) burst(c, 8); });
+  host.querySelectorAll("[data-go]").forEach(b => b.onclick = () => go(b.dataset.go));
+  host.querySelectorAll("[data-ck]").forEach(c => c.onchange = () => { S.guideCk ||= {}; S.guideCk[c.dataset.ck] = c.checked; save(); if(c.checked) burst(c, 8); });
 }
