@@ -282,7 +282,7 @@ function render(){
   let fn = ROUTES[v];
   if(v.startsWith("lesson-")) fn = () => renderLesson(v.slice(7));
   if(!fn){ v = "home"; fn = renderHome; }
-  const tab = (v.startsWith("lesson-") || v === "terms" || v === "practice") ? "lessons" : (v === "test" || v === "guide") ? "home" : v;
+  const tab = (v.startsWith("lesson-") || v === "terms" || v === "practice" || v === "notebook") ? "lessons" : (v === "test" || v === "guide" || v === "mock" || v === "mock-result") ? "home" : v;
   document.querySelectorAll(".tabs button").forEach(b => { if(b.dataset.tab === tab) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current"); });
   app.innerHTML = "";
   app.style.removeProperty("--sec");
@@ -506,6 +506,7 @@ function renderLesson(id){
     const gl = glosser();
     p.appendChild(quiz(gl(c.quiz.q), c.quiz.opts, c.quiz.a, ok => {
       LP.res[LP.i] = ok; LP.ok = ok;
+      rec({id:"c:" + idx, sec:c.sec}, ok);
       const prev = S.cards[idx] || {};
       S.cards[idx] = {seen:true, ok: !!(prev.ok || ok)};
       if(!ok) toReview(idx);
@@ -852,6 +853,7 @@ function renderReview(){
   const gl = glosser();
   p.appendChild(quiz(gl(c.quiz.q), c.quiz.opts, c.quiz.a, ok => {
     let msg;
+    rec({id:"c:" + idx, sec:c.sec}, ok);
     if(ok){
       RV.ok++; S.reviewOk++;
       const lv = (S.review[idx]?.lv || 1) + 1;
@@ -913,6 +915,7 @@ function renderTest(){
   next.type = "button"; next.className = "btn primary wide"; next.textContent = "次へ"; next.hidden = true;
   const gl = glosser();
   p.appendChild(quiz(gl(q.q), q.opts, q.a, ok => {
+    if(q.id) rec(q, ok);
     if(ok){ TS.ok++; gainXP(5); } else { TS.hp--; TS.miss.push(q); }
     next.hidden = false;
     if(TS.hp <= 0 || TS.i === 9) next.textContent = "結果を見る";

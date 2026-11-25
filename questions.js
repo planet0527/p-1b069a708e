@@ -131,7 +131,10 @@ const QBANK = [
 {sec:"st", q:"営業秘密として保護されるための要件に含まれないものは？", opts:["秘密として管理されている","事業に役立つ情報である","公然と知られていない","特許庁に登録されている"], a:3, exp:"営業秘密は登録不要。要件は秘密管理性・有用性・非公知性。"},
 {sec:"st", q:"品質マネジメントシステムの国際規格は？", opts:["ISO 9001","ISO 14001","ISO/IEC 27001","ISO/IEC 20000"], a:0, exp:"9001＝品質、14001＝環境、27001＝情報セキュリティ、20000＝ITサービス。"}
 ];
-FINAL_POOL.push(...QBANK.map(({q,opts,a,exp}) => ({q,opts,a,exp})));
+QBANK.forEach((x,i) => x.id = "b:" + i);
+FINAL_POOL.push(...QBANK.map(({q,opts,a,exp,id,sec}) => ({q,opts,a,exp,id,sec})));
+/* 用語ずかんの分野 → 問題の分野 */
+const TC2SEC = {ai:"basic", sec:"sec", nw:"nw", db:"db", hw:"hw", sys:"sys", basic:"basic", dev:"dev", mgmt:"mgmt", st:"st", law:"st"};
 
 /* ---------- 用語ずかんから自動で作る「用語クイズ」 ---------- */
 function termQuestions(cat){
@@ -143,7 +146,7 @@ function termQuestions(cat){
     const same = TERMS.filter(x => x !== t && x.c === t.c);
     const others = shuffle(same.length >= 3 ? same : TERMS.filter(x => x !== t)).slice(0, 3);
     const opts = shuffle([t, ...others]);
-    out.push({q:`「${t.d}」に当てはまる用語は？`, opts: opts.map(x => x.t), a: opts.indexOf(t), exp:`見分け方：${t.k}`, term:true});
+    out.push({q:`「${t.d}」に当てはまる用語は？`, opts: opts.map(x => x.t), a: opts.indexOf(t), exp:`見分け方：${t.k}`, term:true, id:"t:" + t.t, sec: TC2SEC[t.c]});
   });
   return out;
 }
@@ -225,6 +228,7 @@ function renderPractice(){
   next.textContent = st.i === st.list.length-1 ? "結果を見る" : "次の問題";
   p.appendChild(quiz(gl(q.q), q.opts, q.a, ok => {
     S.practice.done++;
+    rec(q, ok);
     if(ok){ st.ok++; S.practice.ok++; gainXP(4); } else { st.miss.push(q); gainXP(1); }
     save(); checkMissions();
     next.hidden = false;
