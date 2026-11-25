@@ -223,6 +223,9 @@ ORDER BY o.order_id;</code></pre>
   sec("数字を動かして理解する：計算の公式", "計算", motion2HTML().calc) +
   sec("動かして理解する：数・式・木・メモリ", "基礎理論", motion2HTML().data) +
   sec("動かして理解する：正規化・RAID・カプセル化", "仕組み", motion2HTML().sys) +
+  (typeof motion3HTML === "function" ? sec("数字を動かして理解する：マネジメント・性能", "計算", motion3HTML().mgmt) +
+  sec("動かして理解する：通信の手順・誤り検出・ハッシュ", "ネットワーク", motion3HTML().nw) +
+  sec("動かして理解する：SQL・再帰・ハッシュ表・回路", "アルゴリズム", motion3HTML().algo) : "") +
   sec("まず試験の形を知る", "基本", `
     <div class="gstats">
       <div><b class="num">60</b><span>問</span><small>四肢択一</small></div>

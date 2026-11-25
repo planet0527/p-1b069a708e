@@ -235,6 +235,7 @@ function eatRender(v){
 /* ---------- 振り分け ---------- */
 function wire(box){
   const t = box.dataset.motion2;
+  if(window.M2EXT && window.M2EXT[t]) return window.M2EXT[t](box);
   if(t === "bits") return wireBits(box);
   if(t === "raid") return wireRaid(box);
   if(t === "page") return stepper(box, {select:{label:"置換え方式", value:"fifo", options:[["fifo","FIFO（先に入れたものを出す）"],["lru","LRU（最も長く使っていないものを出す）"]]}, build:pageSteps,
@@ -252,6 +253,7 @@ function wire(box){
   if(t === "eat") return slider(box, {sliders:[{key:"hit",label:"ヒット率",min:50,max:100,step:1,value:90,show:x => x + "%"},{key:"c",label:"キャッシュのアクセス時間（ns）",min:1,max:20,step:1,value:10},{key:"m",label:"主記憶のアクセス時間（ns）",min:30,max:200,step:10,value:100}], render:eatRender});
 }
 
+window.M2 = {stepper, slider, cell, fmt, esc:e};
 window.motion2HTML = () => {
   const d = (sum, key) => `<details class="usage"><summary>${sum}</summary><div class="usage-body" data-motion2="${key}"></div></details>`;
   return {
@@ -269,7 +271,7 @@ window.wireMotions2 = root => root.querySelectorAll("[data-motion2]").forEach(bo
 
 /* 用語ずかんのカードから、対応する「動く図」へ飛べるようにする */
 (() => {
-  const MAP = {"正規化":"norm","RAID":"raid","逆ポーランド記法":"rpn","木構造":"tree","ページ置換えアルゴリズム":"page","損益分岐点":"bep","待ち行列":"queue",
+  const MAP = window.MOTION_MAP = {"正規化":"norm","RAID":"raid","逆ポーランド記法":"rpn","木構造":"tree","ページ置換えアルゴリズム":"page","損益分岐点":"bep","待ち行列":"queue",
     "伝送時間の計算":"trans","キャッシュメモリと実効アクセス時間":"eat","補数":"bits","2進数と基数変換":"bits","OSI参照モデルと中継機器":"cap","スタックとキュー":"containers",
     "探索アルゴリズム":"binary","ソートの種類":"sort","排他制御とデッドロック":"lock","稼働率":"availability","バックアップの種類":"backup","共通鍵暗号と公開鍵暗号":"crypto",
     "デジタル署名":"crypto","論理演算":"logic","サブネットマスクとホスト数":"subnet","クリティカルパス":"path","ARP":"network","DNS":"network"};
