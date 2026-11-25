@@ -146,7 +146,7 @@ function renderMock(){
   app.appendChild(p);
 
   const g = document.createElement("section");
-  g.className = "panel"; g.hidden = !m.grid;
+  g.className = "panel"; if(!m.grid) g.style.display = "none";
   g.innerHTML = `<div class="row between"><h2>問題一覧</h2><span class="small muted">★＝見直し</span></div>
     <div class="mgrid">${m.list.map((_,k)=>`<button type="button" data-j="${k}" class="${m.ans[k]!==null?"done":""} ${m.flag[k]?"fl":""} ${k===m.i?"cur":""}">${k+1}</button>`).join("")}</div>`;
   app.appendChild(g);
