@@ -151,6 +151,10 @@ function renderCards(){
 /* ---------- 聞き流し（読み上げ） ---------- */
 let LS = {mode:"hot", i:0, playing:false, rate:1, list:null};
 let listenToken = 0, listenTimer = null;
+function listenVolume(){
+  const value = S.ui?.listenVolume;
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 1 ? value : 1;
+}
 function stopListen(){
   listenToken++;
   if(listenTimer !== null){ clearTimeout(listenTimer); listenTimer = null; }
@@ -164,7 +168,7 @@ function speak(text, onend){
   try {
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = "ja-JP"; u.rate = LS.rate;
+    u.lang = "ja-JP"; u.rate = LS.rate; u.volume = listenVolume();
     const v = speechSynthesis.getVoices().find(v => v.lang && v.lang.startsWith("ja"));
     if(v) u.voice = v;
     u.onend = onend;
@@ -201,6 +205,8 @@ function renderListen(){
       <button type="button" class="btn" id="lsNext" aria-label="次の用語" ${!supported || !t ? "disabled" : ""}>⏭</button>
     </div>
     <div class="setrow"><span>速さ</span><div class="chips">${[[0.8,"ゆっくり"],[1,"ふつう"],[1.3,"速め"]].map(([r,l])=>`<button type="button" class="chipbtn" data-r="${r}" aria-pressed="${LS.rate===r}">${l}</button>`).join("")}</div></div>
+    <div class="setrow"><label for="lsVolume">音声音量</label><div class="volume-control"><input type="range" id="lsVolume" min="0" max="100" step="5" value="${Math.round(listenVolume()*100)}" ${!supported ? "disabled" : ""}><output id="lsVolumeValue" for="lsVolume">${Math.round(listenVolume()*100)}%</output></div></div>
+    <p class="small muted">0%で消音。端末本体の音量と組み合わせて調整してください。</p>
     <p class="small muted">画面を消すと止まる端末があります。止まったら再生を押し直してね。</p>`;
   const play = () => {
     if(!LS.list.length) return;
@@ -214,6 +220,19 @@ function renderListen(){
   };
   p.querySelectorAll("[data-m]").forEach(b => b.onclick = () => { stopListen(); LS.mode = b.dataset.m; LS.list = listenList(); LS.i = 0; render(); });
   p.querySelectorAll("[data-r]").forEach(b => b.onclick = () => { const playing = LS.playing; stopListen(); LS.rate = +b.dataset.r; LS.playing = playing; if(playing) play(); render(); });
+  const volume = $("#lsVolume");
+  if(volume){
+    volume.oninput = () => {
+      const value = Math.max(0, Math.min(100, Number(volume.value)));
+      if(!Number.isFinite(value)) return;
+      S.ui ||= {}; S.ui.listenVolume = value / 100;
+      $("#lsVolumeValue").textContent = value + "%"; save();
+    };
+    volume.onchange = () => {
+      volume.oninput();
+      if(LS.playing){ stopListen(); LS.playing = true; play(); }
+    };
+  }
   $("#lsPlay").onclick = () => { if(!supported || !LS.list.length) return; if(LS.playing) stopListen(); else { LS.playing = true; play(); } render(); };
   $("#lsNext").onclick = () => { if(!LS.list.length) return; LS.i = (LS.i+1) % LS.list.length; if(LS.playing) play(); render(); };
   $("#lsPrev").onclick = () => { LS.i = Math.max(0, LS.i-1); if(LS.playing) play(); render(); };
