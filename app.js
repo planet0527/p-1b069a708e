@@ -282,7 +282,7 @@ function render(){
   let fn = ROUTES[v];
   if(v.startsWith("lesson-")) fn = () => renderLesson(v.slice(7));
   if(!fn){ v = "home"; fn = renderHome; }
-  const tab = (v.startsWith("lesson-") || v === "terms" || v === "practice" || v === "notebook") ? "lessons" : (v === "test" || v === "guide" || v === "mock" || v === "mock-result") ? "home" : v;
+  const tab = (v.startsWith("lesson-") || v === "terms" || v === "glossary" || v === "practice" || v === "notebook") ? "lessons" : (v === "test" || v === "guide" || v === "mock" || v === "mock-result") ? "home" : v;
   document.querySelectorAll(".tabs button").forEach(b => { if(b.dataset.tab === tab) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current"); });
   app.innerHTML = "";
   app.style.removeProperty("--sec");
@@ -435,7 +435,8 @@ function pageHead(title, sub, mood="normal"){
 
 /* ---------- レッスン一覧 ---------- */
 function renderLessons(){
-  app.innerHTML = pageHead("レッスン", "1分野は4〜5枚、10分ほど。まず勘で答えてから解説を読むと、ただ読むより記憶に残るよ。") +
+  const counts = SECTIONS.map(s => secStats(s.id).total);
+  app.innerHTML = pageHead("レッスン", `1分野は${Math.min(...counts)}〜${Math.max(...counts)}枚。1枚ずつ、好きなところで区切って学べます。まず予想してから解説を読もう。`) +
     `<button type="button" class="termlink" id="toTerms"><span class="ic">図</span><span><b>用語ずかん</b><br><span class="small">よく出る用語・新しい用語${TERMS.length}語を図解で</span></span><span class="go">開く</span></button>`;
   $("#toTerms").onclick = () => go("#terms");
   app.querySelector(".pagehead").insertAdjacentHTML("afterend", `<button type="button" class="termlink guidelink" id="toGuide"><span class="ic">攻</span><span><b>科目A攻略ガイド</b><br><span class="small">知っておくと受験が楽になるコツ</span></span><span class="go">開く</span></button>`);
@@ -454,8 +455,15 @@ function renderLessons(){
     list.appendChild(b);
   });
   app.appendChild(list);
-  renderGlossary();
 }
+ROUTES.glossary = function(){
+  app.innerHTML = pageHead("略語ずかん", "略語・正式名称・日本語の意味から検索できます。");
+  const back = document.createElement("button");
+  back.type = "button"; back.className = "btn"; back.textContent = "レッスン一覧に戻る";
+  back.onclick = () => go("#lessons");
+  app.appendChild(back);
+  renderGlossary();
+};
 function renderGlossary(){
   const p = document.createElement("section");
   p.className = "panel";
@@ -508,7 +516,7 @@ function renderLesson(id){
       LP.res[LP.i] = ok; LP.ok = ok;
       rec({id:"c:" + idx, sec:c.sec}, ok);
       const prev = S.cards[idx] || {};
-      S.cards[idx] = {seen:true, ok: !!(prev.ok || ok)};
+      S.cards[idx] = {...prev, seen:true, read: !!(prev.read ?? prev.seen), ok: !!(prev.ok || ok)};
       if(!ok) toReview(idx);
       const g = ok ? 10 : 3; LP.xp += g; gainXP(g);
       next.hidden = false;
@@ -528,6 +536,7 @@ function renderLesson(id){
     next.type = "button"; next.className = "btn primary wide";
     next.textContent = LP.i === n-1 ? "わかった！ 結果を見る（+5XP）" : "わかった！ 次へ（+5XP）";
     next.onclick = () => {
+      S.cards[idx] = {...S.cards[idx], read:true};
       day().lesson++; LP.xp += 5; gainXP(5);
       LP.i++; LP.phase = "predict"; checkMissions(); render();
     };
@@ -535,7 +544,7 @@ function renderLesson(id){
   }
 }
 function lessonSummary(sec){
-  const hit = LP.res.filter(x=>x===true).length, n = LP.list.length, t = secStats(sec.id);
+  const hit = LP.res.filter(x=>x===true).length, n = LP.res.filter(x=>typeof x === "boolean").length, t = secStats(sec.id);
   const nextSec = roadOrder().find(s => s.id !== sec.id && secStats(s.id).done < secStats(s.id).total);
   const p = document.createElement("section");
   p.className = "panel";
@@ -978,3 +987,4 @@ function setupBackup(){
 render();
 checkBadges();
 restoreFromIDB().then(changed => { if(changed) render(); else save(); });
+

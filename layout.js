@@ -7,6 +7,7 @@ const MENU = [
   {go:"#mock", icon:"模", title:"模擬試験", color:"#18233b", sub:() => S.mockCur ? `再開する（${S.mockCur.ans.filter(x=>x!==null).length}/60）` : S.mocks?.length ? `前回 ${S.mocks[0].score}点` : "60問・90分"},
   {go:"#cards", icon:"札", title:"単語カード", color:"#0d7c66", sub:() => "めくる・聞き流す"},
   {go:"#terms", icon:"図", title:"用語ずかん", color:"#2b62cf", sub:() => `覚えた ${Object.keys(S.terms||{}).length}/${TERMS.length}`},
+  {go:"#glossary", icon:"略", title:"略語ずかん", color:"#16919f", sub:() => `${Object.keys(GLOSS).length}語・意味からも検索`},
   {go:"#notebook", icon:"✎", title:"間違いノート", color:"#cc3f3f", sub:() => { const n = wrongIds().length; return n ? `${n}問たまっている` : "間違いがここに集まる"; }, badge:() => wrongIds().length},
   {go:"#drill", icon:"計", title:"計算ドリル", color:"#c75f12", sub:() => "数字が毎回かわる"},
   {go:"#test", icon:"闘", title:"ボス戦", color:"#7a55e0", sub:() => S.best?.test ? `最高 ${S.best.test}/10` : "ランダム10問・ライフ3"},
@@ -71,7 +72,16 @@ ROUTES.home = function(){
       <span class="chip-lg">連続 <b class="num">${streak()}</b>日</span>
       <button type="button" class="gear" id="toSettings" aria-label="設定とバックアップ">⚙</button></span></div>`;
   top.appendChild(hero);
+  const lesson = nextLesson();
+  next.textContent = lesson.label;
+  next.onclick = () => { resumeLesson(lesson); };
   top.appendChild(next);
+  const review = document.createElement("button");
+  review.type = "button"; review.className = "btn wide home-review";
+  const due = dueList().length;
+  review.textContent = due ? `今日の復習をする（${due}問）` : "復習ボックスを見る（今日の出題なし）";
+  review.onclick = () => go("#review");
+  top.appendChild(review);
   if(stats){ stats.classList.add("stats-compact"); top.appendChild(stats); }
   if(exam) exam.remove();
 
@@ -85,7 +95,10 @@ ROUTES.home = function(){
   const menu = block("練習メニュー", "やりたいことを選ぶ", tileGrid(MENU));
 
   /* 合格への道 */
-  const roadBlock = block("合格への道", "ステージを順にクリア", road);
+  const roadBlock = document.createElement("details");
+  roadBlock.className = "panel road-details";
+  roadBlock.innerHTML = `<summary>合格への道<span class="small muted">全${SECTIONS.length}ステージの進み具合を見る</span></summary>`;
+  roadBlock.appendChild(road);
   road.querySelector(".row.between")?.remove();
 
   /* 記録：タブで切り替え */
@@ -114,17 +127,37 @@ ROUTES.lessons = function(){
   lessonsBase3();
   app.querySelectorAll(".termlink").forEach(b => b.remove());
   const head = app.querySelector(".pagehead"), list = app.querySelector(".seclist");
-  const glossaryPanel = [...app.querySelectorAll(".panel")].find(p => p.querySelector("#glq"));
   const stagesHelp = document.createElement("p");
   stagesHelp.className = "small muted";
   stagesHelp.textContent = "上から順に進めると、基礎から無理なく理解できる並びになっています。各ステージは最初に入門カード（そもそも何？）、そのあと試験によく出るカードが続きます。";
   app.innerHTML = "";
   app.append(...[head,
     block("ステージ一覧", `${CARDS.length}枚のカード`, stagesHelp, list),
-    block("用語を覚える", "", tileGrid(MENU.filter(m => ["#cards","#terms","#notebook","#guide"].includes(m.go)))),
-    glossaryPanel
+    block("用語を覚える・振り返る", "", tileGrid(MENU.filter(m => ["#cards","#terms","#glossary","#notebook","#guide"].includes(m.go))))
   ].filter(Boolean));
 };
+
+/* 回答済みのカードを最初から繰り返さず、未読のカードから再開する。
+   同じ起動中のレッスンは、解説ページを含めてそのまま再開する。 */
+function nextLesson(){
+  if(LP && LP.i < LP.list.length){
+    const sec = secOf(LP.sec);
+    if(sec) return {sec:sec.id, label:`学習を続ける：${sec.title}（${LP.i+1}/${LP.list.length}枚）`, active:true};
+  }
+  const isRead = i => !!(S.cards[i]?.read ?? S.cards[i]?.seen);
+  const section = roadOrder().find(s => secStats(s.id).idx.some(i => !isRead(i))) || currentSec();
+  if(!section) return {label:"全カードを学習済み！ 問題演習へ", route:"#practice"};
+  const list = secStats(section.id).idx;
+  let index = list.findIndex(i => !isRead(i));
+  if(index < 0) index = list.findIndex(i => !learned(i));
+  index = Math.max(0, index);
+  return {sec:section.id, list, index, label:`${Object.keys(S.cards).length ? "学習を続ける" : "学習をはじめる"}：${section.title}（${index+1}/${list.length}枚）`};
+}
+function resumeLesson(lesson){
+  if(lesson.route){ go(lesson.route); return; }
+  if(!lesson.active) LP = {sec:lesson.sec, list:lesson.list, i:lesson.index, phase:"predict", res:[], xp:0, ok:false};
+  go("#lesson-" + lesson.sec);
+}
 
 /* ステージの中身をドロップダウンで確認する */
 const STAGE_OPEN = new Set();
@@ -184,3 +217,4 @@ render = function(){
 window.removeEventListener("hashchange", baseRender4);
 window.addEventListener("hashchange", render);
 render();
+
