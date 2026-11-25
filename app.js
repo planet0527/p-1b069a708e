@@ -477,7 +477,7 @@ function renderHome(){
   setupBackup();
   const resetBtn = $("#resetBtn");
   resetBtn.onclick = () => {
-    if(resetBtn.dataset.sure){ LP = null; S = blank(); save(); render(); }
+    if(resetBtn.dataset.sure){ resetLearningSessions(); S = blank(); save(); render(); }
     else { resetBtn.dataset.sure = "1"; resetBtn.textContent = "本当に消す場合はもう一度押す"; }
   };
   const showClock = () => { const s = Math.floor(timerMs()/1000); $("#clock").textContent = `${pad(Math.floor(s/3600))}:${pad(Math.floor(s/60)%60)}:${pad(s%60)}`; };
@@ -773,15 +773,16 @@ function renderDrill(){
   panel.className = "panel";
   panel.innerHTML = `<div class="row between"><span class="pill calc">${p.label}</span><span class="small muted num">連続正解 ${DR.streak}　今日の正解 ${(S.days[today()]||{}).drill||0}</span></div>`;
   const next = document.createElement("button");
-  next.type = "button"; next.className = "btn calc wide"; next.textContent = "次の問題"; next.hidden = true;
+  next.type = "button"; next.className = "btn calc wide"; next.textContent = "次の問題"; next.hidden = !Number.isInteger(p.choice);
   const gl = glosser();
-  panel.appendChild(quiz(gl(p.q), p.opts, p.a, ok => {
+  panel.appendChild(quiz(gl(p.q), p.opts, p.a, (ok, choice) => {
+    p.choice = choice;
     if(ok){ DR.streak++; day().drill++; S.drillOk++; gainXP(6); } else { DR.streak = 0; gainXP(1); }
     if(ok && DR.streak > 0 && DR.streak % 5 === 0) toast(`計算 ${DR.streak}問連続正解！`);
     checkMissions(); save();
     next.hidden = false;
     return `<p class="xp-pop">+${ok?6:1} XP</p>`;
-  }, ""));
+  }, "", p.choice));
   const sol = document.createElement("div");
   sol.className = "panel";
   sol.style.cssText = "background:var(--paper);border:0;padding:12px";
@@ -929,18 +930,20 @@ function renderReview(){
     p.appendChild(b);
     return;
   }
-  const idx = RV.list[RV.i], c = CARDS[idx], st = S.review[idx] || {lv:1};
+  RV.answers ||= [];
+  const previous = RV.answers[RV.i];
+  const idx = RV.list[RV.i], c = CARDS[idx], st = previous ? {lv:previous.level} : S.review[idx] || {lv:1};
   p.innerHTML = `<div class="row between"><span class="small muted num">${RV.i+1} / ${RV.list.length}</span><span class="pill num">段階 ${st.lv} / 3</span></div><h2>${c.title}</h2>`;
   const next = document.createElement("button");
-  next.type = "button"; next.className = "btn primary wide"; next.textContent = RV.i === RV.list.length-1 ? "結果を見る" : "次へ"; next.hidden = true;
+  next.type = "button"; next.className = "btn primary wide"; next.textContent = RV.i === RV.list.length-1 ? "結果を見る" : "次へ"; next.hidden = !previous;
   const gl = glosser();
-  p.appendChild(quiz(gl(c.quiz.q), c.quiz.opts, c.quiz.a, ok => {
+  p.appendChild(quiz(gl(c.quiz.q), c.quiz.opts, c.quiz.a, (ok, choice) => {
     let msg;
     rec({id:"c:" + idx, sec:c.sec}, ok);
     if(ok){
       RV.ok++; S.reviewOk++;
       const lv = (S.review[idx]?.lv || 1) + 1;
-      if(lv > 3){ delete S.review[idx]; S.cards[idx] = {seen:true, ok:true}; msg = "卒業！ もう大丈夫です。"; }
+      if(lv > 3){ delete S.review[idx]; S.cards[idx] = {...S.cards[idx], seen:true, ok:true}; msg = "卒業！ もう大丈夫です。"; }
       else { S.review[idx] = {lv, due: addDays(GAPS[lv])}; msg = `次は${GAPS[lv]}日後にもう一度。`; }
       gainXP(8);
     } else {
@@ -948,10 +951,11 @@ function renderReview(){
       msg = "明日もう一度出します。下の解説で確認しておきましょう。";
       gainXP(2);
     }
+    RV.answers[RV.i] = {choice, level:st.lv, msg};
     day().review++; checkMissions(); save();
     next.hidden = false;
-    return `<p>${gl(c.quiz.exp)}</p><p class="small"><b>${msg}</b></p>`;
-  }));
+    return `<p class="small"><b>${msg}</b></p>`;
+  }, `<p>${gl(c.quiz.exp)}</p>${previous ? `<p class="small"><b>${previous.msg}</b></p>` : ""}`, previous?.choice));
   const det = document.createElement("details");
   det.innerHTML = `<summary style="cursor:pointer;font-weight:700;color:var(--accent)">解説をもう一度読む</summary><div style="display:flex;flex-direction:column;gap:12px;margin-top:10px">${explainHTML(c)}</div>`;
   p.appendChild(det);
@@ -974,7 +978,8 @@ function renderTest(){
     p.appendChild(b);
     return;
   }
-  if(TS.i >= TS.list.length || TS.hp <= 0){
+  TS.answers ||= [];
+  if(TS.i >= TS.list.length || (TS.hp <= 0 && !Number.isInteger(TS.answers[TS.i]))){
     const done = TS.i >= TS.list.length, pass = done && TS.ok >= 8;
     if(done && TS.ok > S.best.test) S.best.test = TS.ok;
     save(); checkBadges();
@@ -995,15 +1000,16 @@ function renderTest(){
   const q = TS.list[TS.i];
   p.innerHTML = `<div class="row between"><span class="num">第${TS.i+1}問 / 10</span><span class="hearts" aria-label="ライフ ${TS.hp}">${"♥".repeat(TS.hp)}<span style="opacity:.25">${"♥".repeat(3-TS.hp)}</span></span></div>`;
   const next = document.createElement("button");
-  next.type = "button"; next.className = "btn primary wide"; next.textContent = "次へ"; next.hidden = true;
+  next.type = "button"; next.className = "btn primary wide"; next.textContent = TS.hp <= 0 || TS.i === TS.list.length-1 ? "結果を見る" : "次へ"; next.hidden = !Number.isInteger(TS.answers[TS.i]);
   const gl = glosser();
-  p.appendChild(quiz(gl(q.q), q.opts, q.a, ok => {
+  p.appendChild(quiz(gl(q.q), q.opts, q.a, (ok, choice) => {
+    TS.answers[TS.i] = choice;
     if(q.id) rec(q, ok);
     if(ok){ TS.ok++; gainXP(5); } else { TS.hp--; TS.miss.push(q); }
     next.hidden = false;
     if(TS.hp <= 0 || TS.i === 9) next.textContent = "結果を見る";
     return "";
-  }, `<p>${gl(q.exp)}</p>`));
+  }, `<p>${gl(q.exp)}</p>`, TS.answers[TS.i]));
   next.onclick = () => { TS.i++; render(); };
   p.appendChild(next);
 }
@@ -1015,9 +1021,20 @@ function decodeRecord(t){
   if(t.startsWith("KA1:")) t = decodeURIComponent(escape(atob(t.slice(4))));
   return normalizeRecord(JSON.parse(t), true);
 }
+function resetLearningSessions(){
+  LP = null; RV = null; TS = null;
+  DR = {type:"all", cur:null, streak:0};
+  PR.set = null;
+  if(typeof FC !== "undefined") FC = null;
+  if(typeof LS !== "undefined"){
+    LS.playing = false;
+    try { speechSynthesis.cancel(); } catch(e){}
+  }
+}
 function applyRecord(d){
   const next = normalizeRecord(d, true);
   if(!window.confirm("バックアップを読み込むと、今の学習記録は読み込む内容に置き換わります。今の記録も残したい場合は、先に「バックアップを保存」してください。読み込みますか？")) return false;
+  resetLearningSessions();
   S = next; save();
   LP = restoreLessonSession(S.lessonSession);
   toast("記録を戻しました");
