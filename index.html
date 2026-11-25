@@ -488,6 +488,15 @@ svg .ta{fill:var(--accent);font-family:var(--font-body);font-size:12px;font-weig
 svg .lng{stroke:var(--good);stroke-width:3;fill:none}
 svg .lnr{stroke:var(--bad);stroke-width:2;fill:none;stroke-dasharray:5 4}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+/* 毎日の入口と折りたたみマップ */
+.home-top .home-review{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.55);color:#fff;box-shadow:none}
+.home-top #nextBtn{white-space:normal;overflow-wrap:anywhere;line-height:1.6}
+.road-details>summary{cursor:pointer;font-weight:700;min-height:44px}
+.road-details>summary .small{display:block;margin-top:4px}
+.road-details[open]>.road-wrap{margin-top:12px}
+.tile-sub{overflow-wrap:anywhere}
+input[type="search"]{font-size:16px}
+@media(max-width:380px){.ht-row{flex-wrap:wrap}.ht-chips{flex-wrap:wrap}.tiles{gap:8px}.tile{min-width:0}}
 </style>
 </head>
 <body>
@@ -503,20 +512,21 @@ svg .lnr{stroke:var(--bad);stroke-width:2;fill:none;stroke-dasharray:5 4}
   </div>
 </nav>
 
-<script src="data.js?v=10"></script>
-<script src="visuals.js?v=10"></script>
-<script src="glossary.js?v=10"></script>
-<script src="terms.js?v=10"></script>
-<script src="terms2.js?v=10"></script>
-<script src="terms3.js?v=10"></script>
-<script src="dbterms.js?v=10"></script>
-<script src="lessons2.js?v=10"></script>
-<script src="guide.js?v=10"></script>
-<script src="questions.js?v=10"></script>
-<script src="app.js?v=10"></script>
-<script src="extras.js?v=10"></script>
-<script src="learn.js?v=10"></script>
+<script src="data.js?v=11"></script>
+<script src="visuals.js?v=11"></script>
+<script src="glossary.js?v=11"></script>
+<script src="terms.js?v=11"></script>
+<script src="terms2.js?v=11"></script>
+<script src="terms3.js?v=11"></script>
+<script src="dbterms.js?v=11"></script>
+<script src="lessons2.js?v=11"></script>
+<script src="guide.js?v=11"></script>
+<script src="questions.js?v=11"></script>
+<script src="app.js?v=11"></script>
+<script src="extras.js?v=11"></script>
+<script src="learn.js?v=11"></script>
 <script src="layout.js?v=11"></script>
 <script>if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});</script>
 </body>
 </html>
+
