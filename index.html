@@ -665,6 +665,18 @@ section.guide h2{scroll-margin-top:12px}
 :root:not([data-theme="light"]) .btn.calc{background:color-mix(in srgb,var(--calc) 60%,#000);color:#fff}
 :root:not([data-theme="light"]) .stage-tg{color:color-mix(in srgb,var(--c) 55%,#fff)}
 }
+
+.m4-cpu{display:flex;min-height:62px;border:1px solid var(--line);background:var(--accent-soft);border-radius:10px;overflow:hidden}
+.m4-cpu>span{display:flex;flex-direction:column;justify-content:center;align-items:center;color:white;border-right:1px solid var(--card);font-weight:700;font-size:14px;min-width:0}
+.m4-cpu small{font-size:10px;white-space:nowrap}
+.m4-graph{width:100%;max-width:450px;height:auto}
+.m4-track{position:relative;height:90px;margin:10px 13px 0}
+.m4-track-line{position:absolute;left:0;right:0;top:44px;border-top:3px solid var(--accent)}
+.m4-tick{position:absolute;top:61px;transform:translateX(-50%);font-size:12px}
+.m4-request{position:absolute;top:32px;transform:translateX(-50%);color:var(--calc);font-size:18px}
+.m4-request.served{color:var(--good)}
+.m4-head{position:absolute;top:4px;transform:translateX(-50%);color:var(--accent);font-size:24px;transition:left .25s ease}
+@media(prefers-reduced-motion:reduce){.m4-head{transition:none}}
 </style>
 </head>
 <body>
@@ -680,26 +692,27 @@ section.guide h2{scroll-margin-top:12px}
   </div>
 </nav>
 
-<script src="data.js?v=45"></script>
-<script src="visuals.js?v=45"></script>
-<script src="glossary.js?v=45"></script>
-<script src="terms.js?v=45"></script>
-<script src="terms2.js?v=45"></script>
-<script src="terms3.js?v=45"></script>
-<script src="dbterms.js?v=45"></script>
-<script src="usage.js?v=45"></script>
-<script src="lessons2.js?v=45"></script>
-<script src="motion.js?v=45"></script>
-<script src="motion2.js?v=45"></script>
-<script src="motion3.js?v=45"></script>
-<script src="guide.js?v=45"></script>
-<script src="questions.js?v=45"></script>
-<script src="balance.js?v=45"></script>
-<script src="app.js?v=45"></script>
-<script src="extras.js?v=45"></script>
-<script src="learn.js?v=45"></script>
-<script src="layout.js?v=45"></script>
-<script src="reference.js?v=45"></script>
+<script src="data.js?v=46"></script>
+<script src="visuals.js?v=46"></script>
+<script src="glossary.js?v=46"></script>
+<script src="terms.js?v=46"></script>
+<script src="terms2.js?v=46"></script>
+<script src="terms3.js?v=46"></script>
+<script src="dbterms.js?v=46"></script>
+<script src="usage.js?v=46"></script>
+<script src="lessons2.js?v=46"></script>
+<script src="motion.js?v=46"></script>
+<script src="motion2.js?v=46"></script>
+<script src="motion3.js?v=46"></script>
+<script src="motion4.js?v=46"></script>
+<script src="guide.js?v=46"></script>
+<script src="questions.js?v=46"></script>
+<script src="balance.js?v=46"></script>
+<script src="app.js?v=46"></script>
+<script src="extras.js?v=46"></script>
+<script src="learn.js?v=46"></script>
+<script src="layout.js?v=46"></script>
+<script src="reference.js?v=46"></script>
 <script>if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});</script>
 </body>
 </html>
