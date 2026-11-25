@@ -316,6 +316,37 @@ b .abbr,strong .abbr,.point .abbr,.q .abbr{font-weight:400}
 .nb-list{display:grid;gap:8px}
 .nb-row{display:grid;grid-template-columns:40px 1fr auto;gap:10px;align-items:center;border:2px solid var(--line);border-radius:14px;padding:8px 10px;background:var(--card);cursor:pointer;text-align:left}
 .nb-row .ic{width:40px;height:40px;border-radius:10px;background:var(--c);color:#fff;display:grid;place-items:center;font-family:var(--font-display);font-size:13px}
+.qtools{display:flex;gap:8px;justify-content:flex-end}
+.bm-btn,.share-btn{border:2px solid var(--line);background:var(--card);border-radius:99px;padding:3px 10px;font-size:13px;font-weight:700;cursor:pointer;color:var(--muted);display:inline-flex;gap:4px;align-items:center}
+.bm-btn[aria-pressed="true"]{border-color:#e3a008;color:#b07800;background:color-mix(in srgb,#e3a008 12%,var(--card))}
+.bm-terms{display:flex;flex-wrap:wrap;gap:6px}
+.bm-chip{background:var(--accent-soft);color:var(--accent);border-radius:99px;padding:2px 10px;font-size:13px;font-weight:700}
+.daily{border-color:var(--mark);border-width:3px}
+.cardslink{background:var(--card);border-color:var(--good)}
+.cardslink .ic{background:var(--good);color:#fff}
+.cardslink .go{border-color:var(--good);color:var(--good)}
+.fc-modes{display:grid;gap:8px}
+.fc-mode{display:grid;grid-template-columns:1fr auto;gap:2px 10px;text-align:left;border:2px solid var(--line);border-radius:14px;padding:10px 12px;background:var(--card);cursor:pointer}
+.fc-mode .pill{grid-row:span 2;align-self:center}
+.fc{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;min-height:300px;justify-content:center;width:100%;border:3px solid var(--c);border-radius:20px;background:color-mix(in srgb,var(--c) 6%,var(--card));padding:18px 14px;cursor:pointer;color:var(--ink);box-shadow:0 5px 0 var(--c);font:inherit}
+.fc.back{justify-content:flex-start}
+.fc-term{font-family:var(--font-display);font-weight:400;font-size:26px;line-height:1.3}
+.fc-hint{margin-top:18px;font-size:13px;color:var(--muted);border:2px dashed var(--line);border-radius:99px;padding:4px 12px}
+.fc-desc{font-size:15px;text-align:left}
+.fc .tkey{text-align:left;width:100%}
+.fc-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ls-now{display:flex;flex-direction:column;gap:4px;background:var(--paper);border-radius:14px;padding:14px}
+.ls-now b{font-family:var(--font-display);font-weight:400;font-size:22px}
+.ls-ctrl{display:grid;grid-template-columns:1fr 2fr 1fr;gap:8px}
+.memo-fab{position:fixed;right:14px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:15;width:60px;height:60px;border-radius:50%;border:3px solid var(--ink);background:var(--mark);color:#18233b;font-size:22px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;box-shadow:0 4px 0 var(--ink)}
+.memo-fab span{font-size:10px;margin-top:2px}
+.memo-fab[hidden]{display:none}
+.memo-ov{position:fixed;inset:0;z-index:50;background:color-mix(in srgb,var(--paper) 92%,transparent);display:flex;flex-direction:column;padding:calc(10px + env(safe-area-inset-top)) 10px calc(10px + env(safe-area-inset-bottom))}
+.memo-ov[hidden]{display:none}
+.memo-bar{display:flex;align-items:center;gap:8px;justify-content:space-between;flex-wrap:wrap;padding-bottom:8px}
+.memo-ov canvas{flex:1;width:100%;border:2px solid var(--line);border-radius:16px;background-color:var(--card);background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:24px 24px;touch-action:none}
+.tex{font-size:14px;background:color-mix(in srgb,var(--mark) 22%,var(--card));border-radius:10px;padding:8px 10px}
+.tex .klbl{display:inline-block;font-size:11px;font-weight:700;color:#18233b;background:var(--mark);border-radius:5px;padding:0 6px;margin-right:6px}
 .legend{display:grid;gap:4px;color:var(--muted)}
 .stars{color:#e3a008;letter-spacing:1px;font-size:14px}
 .stars .off{color:var(--line)}
@@ -409,15 +440,18 @@ svg .lnr{stroke:var(--bad);stroke-width:2;fill:none;stroke-dasharray:5 4}
   </div>
 </nav>
 
-<script src="data.js?v=5"></script>
-<script src="visuals.js?v=5"></script>
-<script src="glossary.js?v=5"></script>
-<script src="terms.js?v=5"></script>
-<script src="terms2.js?v=5"></script>
-<script src="guide.js?v=5"></script>
-<script src="questions.js?v=5"></script>
-<script src="app.js?v=5"></script>
-<script src="extras.js?v=5"></script>
+<script src="data.js?v=7"></script>
+<script src="visuals.js?v=7"></script>
+<script src="glossary.js?v=7"></script>
+<script src="terms.js?v=7"></script>
+<script src="terms2.js?v=7"></script>
+<script src="dbterms.js?v=7"></script>
+<script src="lessons2.js?v=7"></script>
+<script src="guide.js?v=7"></script>
+<script src="questions.js?v=7"></script>
+<script src="app.js?v=7"></script>
+<script src="extras.js?v=7"></script>
+<script src="learn.js?v=7"></script>
 <script>if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});</script>
 </body>
 </html>

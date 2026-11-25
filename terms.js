@@ -330,6 +330,7 @@ const TFig = (() => {
       case "tree": return tree(f.root, f.items, c);
       case "grid": return grid(f.items, c);
       case "cycle": return cycle(f.items, c);
+      case "tables": return typeof TTables === "function" ? TTables(f, c) : "";
     }
     return "";
   };
@@ -419,13 +420,15 @@ function renderTerms(){
     el.style.setProperty("--c", cat.color);
     const hidden = TM.hide && !TM.open[id];
     el.innerHTML = `
-      <div class="term-top"><span class="tcat">${cat.name}</span><span class="stars" aria-label="頻出度${t.f}">${"★".repeat(t.f)}<span class="off">${"★".repeat(3-t.f)}</span></span>${t.n ? '<span class="newb">NEW</span>' : ""}</div>
+      <div class="term-top"><span class="tcat">${cat.name}</span><span class="stars" aria-label="頻出度${t.f}">${"★".repeat(t.f)}<span class="off">${"★".repeat(3-t.f)}</span></span>${t.n ? '<span class="newb">NEW</span>' : ""}<span style="flex:1"></span>${typeof bmBtn === "function" ? bmBtn("t:" + t.t) : ""}</div>
       <h3>${t.t}</h3><p class="ty">${t.y}</p>
       ${hidden ? `<button type="button" class="reveal">答えを見る（図と説明）</button>` :
       `<figure class="tfig">${TFig(t.fig, cat.color)}</figure>
       <p class="tdesc">${gl(t.d)}</p>
+      ${t.ex ? `<p class="tex"><span class="klbl">具体例</span>${gl(t.ex)}</p>` : ""}
       <p class="tkey"><span class="klbl">見分け方</span>${gl(t.k)}</p>`}
       <button type="button" class="memo-btn" aria-pressed="${memo}">${memo ? "✓ 覚えた" : "覚えたらチェック"}</button>`;
+    if(typeof wireBm === "function") wireBm(el);
     const rv = el.querySelector(".reveal");
     if(rv) rv.onclick = () => { TM.open[id] = true; el.replaceWith(termCard(t)); };
     el.querySelector(".memo-btn").onclick = (e) => {

@@ -148,7 +148,7 @@ function streak(){
 /* ---------- カードの理解度 ---------- */
 const learned = i => !!(S.cards[i] && S.cards[i].ok);
 function secStats(id){
-  const idx = CARDS.map((c,i)=>i).filter(i => CARDS[i].sec === id);
+  const idx = CARDS.map((c,i)=>i).filter(i => CARDS[i].sec === id).sort((x,y) => (CARDS[x].ord ?? 100) - (CARDS[y].ord ?? 100) || x - y);
   return {idx, total: idx.length, done: idx.filter(learned).length};
 }
 

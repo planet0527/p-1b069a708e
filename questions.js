@@ -223,6 +223,7 @@ function renderPractice(){
   const q = st.list[st.i], gl = glosser();
   const secName = q.sec ? (secOf(q.sec)?.title || "") : "用語クイズ";
   p.innerHTML = `<div class="row between"><span class="pill ${q.term ? "good" : ""}">${q.term ? "用語クイズ" : secName}</span><span class="small muted num">${st.i+1} / ${st.list.length}　正解 ${st.ok}</span></div>`;
+  if(typeof qTools === "function") p.appendChild(qTools(q));
   const next = document.createElement("button");
   next.type = "button"; next.className = "btn primary wide"; next.hidden = true;
   next.textContent = st.i === st.list.length-1 ? "結果を見る" : "次の問題";
